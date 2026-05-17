@@ -622,7 +622,7 @@ def api_test_scrape():
     try:
         from scraper.httpx_scraper import IndeedHTTPSource, GlintsHTTPSource, RemotiveSource, JobicySource
         from scraper import fetch_all
-        from formatter import format_tweet, format_rich_post, format_thread
+        from formatter import format_tweet, format_summary_post, format_long_post, format_thread
 
         sources_list = []
         if source in ("indeed", "all"):
@@ -635,12 +635,20 @@ def api_test_scrape():
             sources_list.append((primary, fallback))
 
         listings = fetch_all(sources_list, limit_per_source=5)
+        
+        # Read current format preference
+        format_file = Path("post_format.txt")
+        current_format = format_file.read_text().strip() if format_file.exists() else os.environ.get("POST_FORMAT", "summary")
+        
         results = []
         for listing in listings:
             try:
                 tweet_compact = format_tweet(listing)
-                tweet_rich = format_rich_post(listing)
-                thread = format_thread(listing)
+                if current_format == "summary":
+                    tweet_rich = format_summary_post(listing)
+                else:
+                    tweet_rich = format_long_post(listing)
+                thread = format_thread(listing, post_format=current_format)
             except Exception:
                 tweet_compact = tweet_rich = None
                 thread = []
