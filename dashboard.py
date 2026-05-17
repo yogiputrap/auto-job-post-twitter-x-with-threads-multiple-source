@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from flask import Flask, jsonify, render_template_string, request
+import httpx
 
 app = Flask(__name__)
 
@@ -318,6 +319,10 @@ DASHBOARD_HTML = """
                         <option value="summary" {{ 'selected' if post_format == 'summary' else '' }}>📢 Summary (AI)</option>
                         <option value="raw" {{ 'selected' if post_format == 'raw' else '' }}>📝 Raw Detail</option>
                     </select>
+                    <button class="btn btn-outline" onclick="testGroq()" style="margin-top:0.5rem; width:100%; justify-content:center; font-size:0.8rem;">
+                        <span class="material-icons-outlined" style="font-size:14px;">psychology</span> Test Groq API
+                    </button>
+                    <div id="groq-status" style="font-size:0.75rem; margin-top:0.4rem; color:#64748b;"></div>
                 </div>
             </div>
         </div>
@@ -438,6 +443,26 @@ DASHBOARD_HTML = """
         } catch(e) { console.error(e); }
     }
 
+    async function testGroq() {
+        const el = document.getElementById('groq-status');
+        el.innerHTML = '<span class="spinner"></span> Testing...';
+        el.style.color = '#64748b';
+        try {
+            const resp = await fetch('/api/test-groq');
+            const data = await resp.json();
+            if (data.success) {
+                el.innerHTML = '✅ Connected (' + data.model + ') — ' + data.elapsed + 's';
+                el.style.color = '#10b981';
+            } else {
+                el.innerHTML = '❌ ' + data.error;
+                el.style.color = '#ef4444';
+            }
+        } catch(e) {
+            el.innerHTML = '❌ Network error';
+            el.style.color = '#ef4444';
+        }
+    }
+
     // Close sidebar on nav click (mobile)
     document.querySelectorAll('.sidebar-nav a').forEach(a => {
         a.addEventListener('click', () => {
@@ -539,6 +564,43 @@ def api_format():
     else:
         fmt = format_file.read_text().strip() if format_file.exists() else os.environ.get("POST_FORMAT", "summary")
         return jsonify({"format": fmt})
+
+
+@app.route("/api/test-groq")
+def api_test_groq():
+    """Test Groq API connection."""
+    import time as _time
+    start = _time.time()
+    api_key = os.environ.get("GROQ_API_KEY", "")
+    if not api_key:
+        return jsonify({"success": False, "error": "GROQ_API_KEY not set in environment", "elapsed": 0})
+
+    try:
+        resp = httpx.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": "llama-3.1-8b-instant",
+                "messages": [{"role": "user", "content": "Say 'OK' if you can read this."}],
+                "max_tokens": 10,
+            },
+            timeout=15,
+        )
+        elapsed = round(_time.time() - start, 2)
+
+        if resp.status_code == 200:
+            data = resp.json()
+            reply = data["choices"][0]["message"]["content"].strip()
+            model = data.get("model", "unknown")
+            return jsonify({"success": True, "reply": reply, "model": model, "elapsed": elapsed})
+        else:
+            return jsonify({"success": False, "error": f"HTTP {resp.status_code}: {resp.text[:200]}", "elapsed": elapsed})
+    except Exception as e:
+        elapsed = round(_time.time() - start, 2)
+        return jsonify({"success": False, "error": str(e), "elapsed": elapsed})
 
 
 @app.route("/api/test-scrape")
