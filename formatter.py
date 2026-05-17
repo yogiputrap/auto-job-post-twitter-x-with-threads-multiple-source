@@ -192,18 +192,22 @@ def _format_smart_summary(listing: JobListing) -> str:
 
     # Generate intro sentence
     intro = f"{listing.company} membuka lowongan untuk posisi {listing.title}"
-    if "remote" in listing.location.lower():
-        intro += " secara fully remote."
+    location_lower = listing.location.lower()
+    if any(kw in location_lower for kw in ['remote', 'anywhere', 'worldwide', 'wfh']):
+        intro += " secara Fully Remote."
     else:
         intro += f" di {listing.location}."
     lines.append(intro)
+
+    # Determine remote status for display
+    remote_label = "Fully Remote / WFH" if any(kw in location_lower for kw in ['remote', 'anywhere', 'worldwide', 'wfh']) else listing.location
 
     lines.extend([
         "",
         "━━━━━━━━━━━━━━━━━━━━",
         "",
         "📌 RINGKASAN UTAMA:",
-        f"Lokasi: {listing.location}",
+        f"Lokasi: {remote_label}",
         f"Gaji: {listing.salary or 'Tidak disebutkan'}",
         f"Tipe: {job_type}",
     ])

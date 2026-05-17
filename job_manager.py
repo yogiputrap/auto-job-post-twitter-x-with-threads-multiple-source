@@ -109,6 +109,14 @@ class JobManager:
         self._redaction_filter = CredentialRedactionFilter(secrets)
         self._logger.addFilter(self._redaction_filter)
 
+    @staticmethod
+    def _is_remote(listing: JobListing) -> bool:
+        """Check if a listing is remote. Skip if no remote indication."""
+        text = f"{listing.title} {listing.location} {listing.job_type or ''}".lower()
+        remote_keywords = ['remote', 'wfh', 'work from home', 'anywhere', 'worldwide',
+                           'distributed', 'fully remote', 'home office', 'telecommute']
+        return any(kw in text for kw in remote_keywords)
+
     def run_once(self, max_posts: int = 0) -> CycleSummary:
         """Execute one full Run_Cycle.
         
@@ -127,6 +135,9 @@ class JobManager:
             new_listings: List[JobListing] = []
             for listing in listings:
                 if self._store.contains(listing.job_id):
+                    summary.skipped_duplicate += 1
+                elif not self._is_remote(listing):
+                    self._logger.info("Skipping non-remote listing: %s (%s)", listing.title, listing.location)
                     summary.skipped_duplicate += 1
                 else:
                     new_listings.append(listing)
