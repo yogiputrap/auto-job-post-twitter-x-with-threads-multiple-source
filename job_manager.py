@@ -111,10 +111,17 @@ class JobManager:
 
     @staticmethod
     def _is_remote(listing: JobListing) -> bool:
-        """Check if a listing is remote. Skip if no remote indication."""
-        text = f"{listing.title} {listing.location} {listing.job_type or ''}".lower()
+        """Check if a listing is remote. Skip if no remote indication.
+        
+        Note: Listings from Remotive/Jobicy are always remote by definition.
+        """
+        text = f"{listing.title} {listing.location} {listing.job_type or ''} {listing.url}".lower()
         remote_keywords = ['remote', 'wfh', 'work from home', 'anywhere', 'worldwide',
-                           'distributed', 'fully remote', 'home office', 'telecommute']
+                           'distributed', 'fully remote', 'home office', 'telecommute',
+                           'americas', 'europe', 'asia', 'oceania', 'global']
+        # Remotive and Jobicy are remote-only job boards
+        if 'remotive.com' in text or 'jobicy.com' in text:
+            return True
         return any(kw in text for kw in remote_keywords)
 
     def run_once(self, max_posts: int = 0) -> CycleSummary:

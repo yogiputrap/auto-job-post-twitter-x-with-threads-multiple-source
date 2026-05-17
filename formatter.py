@@ -193,14 +193,19 @@ def _format_smart_summary(listing: JobListing) -> str:
     # Generate intro sentence
     intro = f"{listing.company} membuka lowongan untuk posisi {listing.title}"
     location_lower = listing.location.lower()
-    if any(kw in location_lower for kw in ['remote', 'anywhere', 'worldwide', 'wfh']):
+    url_lower = (listing.url or "").lower()
+    is_remote = any(kw in location_lower for kw in ['remote', 'anywhere', 'worldwide', 'wfh']) or \
+                any(kw in location_lower for kw in ['americas', 'europe', 'asia', 'oceania', 'global']) or \
+                'remotive.com' in url_lower or 'jobicy.com' in url_lower
+    
+    if is_remote:
         intro += " secara Fully Remote."
     else:
         intro += f" di {listing.location}."
     lines.append(intro)
 
     # Determine remote status for display
-    remote_label = "Fully Remote / WFH" if any(kw in location_lower for kw in ['remote', 'anywhere', 'worldwide', 'wfh']) else listing.location
+    remote_label = f"{listing.location} (Fully Remote / WFH)" if is_remote else listing.location
 
     lines.extend([
         "",
@@ -251,10 +256,16 @@ def _extract_requirements(text: str) -> list[str]:
     results = []
     lines = text.split('\n')
 
-    # Find section headers that indicate requirements
     req_keywords = ['requirement', 'qualif', 'must have', 'what you need',
                     'what we look', 'ideal candidate', 'you have', 'you bring',
-                    'skills', 'experience required', 'who you are']
+                    'skills required', 'experience required', 'who you are',
+                    'required technical', 'nice to have', 'what you\'ll need',
+                    'minimum qualif', 'preferred qualif']
+    
+    # Keywords that indicate we should STOP (not requirements)
+    stop_keywords = ['what we offer', 'benefit', 'perks', 'why join', 'about us',
+                     'about the company', 'compensation', 'how to apply',
+                     'responsibilit', 'what you will', 'what you\'ll do']
 
     in_req_section = False
     for line in lines:
@@ -262,34 +273,51 @@ def _extract_requirements(text: str) -> list[str]:
         lower = line_stripped.lower()
 
         # Detect section start
-        if any(kw in lower for kw in req_keywords) and len(line_stripped) < 80:
+        if not in_req_section and any(kw in lower for kw in req_keywords) and len(line_stripped) < 120:
             in_req_section = True
             continue
 
-        # Detect section end (new header)
-        if in_req_section and line_stripped and not line_stripped.startswith(('•', '-', '–', '*', '▪')) and not re.match(r'^\d+[\.\)]', line_stripped):
-            if len(line_stripped) < 60 and line_stripped.endswith(':'):
+        # Detect section end
+        if in_req_section and line_stripped and not line_stripped.startswith(('•', '-', '–', '*', '▪')):
+            if any(kw in lower for kw in stop_keywords):
                 in_req_section = False
+                continue
+            # Empty-ish line after bullets = might be end of section
+            if len(line_stripped) < 5 and results:
                 continue
 
         # Collect bullets in requirement section
-        if in_req_section and line_stripped:
-            clean = re.sub(r'^[•\-–*▪\d+\.\)]\s*', '', line_stripped).strip()
-            if 10 < len(clean) < 250:
+        if in_req_section and line_stripped.startswith(('•', '-', '–', '*', '▪')):
+            clean = re.sub(r'^[•\-–*▪]\s*', '', line_stripped).strip()
+            if 10 < len(clean) < 200 and not clean.endswith(':'):
+                results.append(clean)
+        elif in_req_section and re.match(r'^\d+[\.\)]', line_stripped):
+            clean = re.sub(r'^\d+[\.\)]\s*', '', line_stripped).strip()
+            if 10 < len(clean) < 200 and not clean.endswith(':'):
                 results.append(clean)
 
-    # Fallback: look for any bullets with requirement-like keywords
+    # Fallback: grab any bullet that mentions years/experience/skills
     if not results:
-        req_line_keywords = ['experience', 'years', 'degree', 'proficient', 'knowledge',
-                            'familiar', 'ability', 'strong', 'excellent', 'required']
+        skill_keywords = ['years', 'experience', 'proficient', 'knowledge of',
+                         'familiar with', 'strong', 'degree in', 'certification']
         for line in lines:
             line_stripped = line.strip()
             if line_stripped.startswith(('•', '-', '–', '*')):
                 clean = re.sub(r'^[•\-–*]\s*', '', line_stripped).strip()
-                if any(kw in clean.lower() for kw in req_line_keywords) and 10 < len(clean) < 250:
+                if any(kw in clean.lower() for kw in skill_keywords) and 10 < len(clean) < 200:
                     results.append(clean)
+                    if len(results) >= 6:
+                        break
 
-    return results[:6]
+    # Deduplicate
+    seen = set()
+    unique = []
+    for r in results:
+        if r.lower() not in seen:
+            seen.add(r.lower())
+            unique.append(r)
+
+    return unique[:6]
 
 
 def _extract_responsibilities(text: str) -> list[str]:
@@ -299,26 +327,31 @@ def _extract_responsibilities(text: str) -> list[str]:
 
     resp_keywords = ['responsibilit', 'what you will', 'what you\'ll', 'your role',
                      'you will', 'day to day', 'key duties', 'job description',
-                     'about the role', 'the role']
+                     'about the role', 'the role', 'in this role']
 
     in_resp_section = False
     for line in lines:
         line_stripped = line.strip()
         lower = line_stripped.lower()
 
-        if any(kw in lower for kw in resp_keywords) and len(line_stripped) < 80:
+        if any(kw in lower for kw in resp_keywords) and len(line_stripped) < 100:
             in_resp_section = True
             continue
 
-        if in_resp_section and line_stripped and not line_stripped.startswith(('•', '-', '–', '*', '▪')) and not re.match(r'^\d+[\.\)]', line_stripped):
-            if len(line_stripped) < 60 and (line_stripped.endswith(':') or line_stripped.isupper()):
-                in_resp_section = False
-                continue
+        if in_resp_section and line_stripped:
+            is_bullet = line_stripped.startswith(('•', '-', '–', '*', '▪')) or re.match(r'^\d+[\.\)]', line_stripped)
+            if not is_bullet and len(line_stripped) < 80:
+                if any(kw in lower for kw in ['requirement', 'qualif', 'skill', 'benefit', 'what we offer', 'nice to have']):
+                    in_resp_section = False
+                    continue
 
         if in_resp_section and line_stripped:
-            clean = re.sub(r'^[•\-–*▪\d+\.\)]\s*', '', line_stripped).strip()
-            if 10 < len(clean) < 250:
-                results.append(clean)
+            is_bullet = line_stripped.startswith(('•', '-', '–', '*', '▪')) or re.match(r'^\d+[\.\)]', line_stripped)
+            if is_bullet:
+                clean = re.sub(r'^[•\-–*▪]\s*', '', line_stripped)
+                clean = re.sub(r'^\d+[\.\)]\s*', '', clean).strip()
+                if 10 < len(clean) < 200 and not clean.endswith(':'):
+                    results.append(clean)
 
     return results[:5]
 
