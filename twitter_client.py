@@ -64,10 +64,12 @@ class Poster:
             self._client = None
             return
 
-        # tweepy.Client with OAuth 2.0 User Context
+        # tweepy.Client with OAuth 2.0 User Context for posting
+        # Use access_token for user context (can read + write tweets)
+        # NOT bearer_token which is app-only (read-only)
         self._client = tweepy.Client(
-            bearer_token=oauth_token,
-            wait_on_rate_limit=False,  # We handle rate limits ourselves
+            access_token=oauth_token,
+            wait_on_rate_limit=False,
         )
 
     def post(self, body: str, reply_to: Optional[str] = None) -> PostResult:

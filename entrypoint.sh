@@ -16,5 +16,8 @@ service cron start || cron
 
 echo "[entrypoint] Cron started. Launching dashboard on port ${DASHBOARD_PORT:-5000}..."
 
+# Quick sanity check before starting dashboard
+python -c "from flask import Flask; print('[entrypoint] Flask OK')" || { echo "[entrypoint] ERROR: Flask not available"; exit 1; }
+
 # Run dashboard as the main foreground process
 exec python dashboard.py
