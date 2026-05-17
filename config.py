@@ -14,9 +14,15 @@ class AppConfig(BaseSettings):
     # Zernio API key for posting tweets via Zernio
     zernio_api_key: SecretStr
 
+    # AI summarization (Groq - free tier)
+    groq_api_key: SecretStr = SecretStr("")
+
     # Required search URLs
     indeed_search_url: str
     glints_search_url: str
+
+    # Posting format: "raw" (detailed dump) or "summary" (AI-summarized)
+    post_format: str = "summary"
 
     # Optional tuning parameters
     run_interval_minutes: int = 60

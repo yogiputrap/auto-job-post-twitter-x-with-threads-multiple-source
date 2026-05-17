@@ -313,8 +313,11 @@ DASHBOARD_HTML = """
                     <div class="progress-bar"><div class="progress-fill orange" style="width:0%"></div></div>
                 </div>
                 <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid #f1f5f9;">
-                    <div class="stat-label">POSTING MODE</div>
-                    <div style="font-size:1.1rem; font-weight:700; color:#1e293b; margin-top:0.25rem;">Thread (3 tweets)</div>
+                    <div class="stat-label">POSTING FORMAT</div>
+                    <select id="post-format" onchange="updateFormat(this.value)" style="margin-top:0.5rem; padding:0.4rem 0.75rem; border:1px solid #e2e8f0; border-radius:8px; font-size:0.85rem; font-weight:600; color:#1e293b; background:white; cursor:pointer;">
+                        <option value="summary" {{ 'selected' if post_format == 'summary' else '' }}>📢 Summary (AI)</option>
+                        <option value="raw" {{ 'selected' if post_format == 'raw' else '' }}>📝 Raw Detail</option>
+                    </select>
                 </div>
             </div>
         </div>
@@ -425,6 +428,16 @@ DASHBOARD_HTML = """
         document.getElementById('overlay').classList.toggle('open');
     }
 
+    async function updateFormat(fmt) {
+        try {
+            await fetch('/api/format', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({format: fmt})
+            });
+        } catch(e) { console.error(e); }
+    }
+
     // Close sidebar on nav click (mobile)
     document.querySelectorAll('.sidebar-nav a').forEach(a => {
         a.addEventListener('click', () => {
@@ -482,6 +495,8 @@ def index():
     stats = _get_db_stats()
     logs = _get_recent_logs()
     status = "Online" if Path(DB_PATH).exists() else "Offline"
+    format_file = Path("post_format.txt")
+    post_format = format_file.read_text().strip() if format_file.exists() else os.environ.get("POST_FORMAT", "summary")
     return render_template_string(
         DASHBOARD_HTML,
         status=status,
@@ -490,6 +505,7 @@ def index():
         db_size=stats["db_size"],
         recent_posts=stats["recent_posts"],
         logs=logs,
+        post_format=post_format,
     )
 
 
@@ -507,6 +523,22 @@ def api_health():
 def api_schedule():
     from scheduler import get_schedule_summary
     return jsonify(get_schedule_summary())
+
+
+@app.route("/api/format", methods=["GET", "POST"])
+def api_format():
+    """Get or set the posting format."""
+    format_file = Path("post_format.txt")
+    if request.method == "POST":
+        data = request.get_json() or {}
+        fmt = data.get("format", "summary")
+        if fmt in ("raw", "summary"):
+            format_file.write_text(fmt)
+            return jsonify({"format": fmt, "status": "updated"})
+        return jsonify({"error": "Invalid format"}), 400
+    else:
+        fmt = format_file.read_text().strip() if format_file.exists() else os.environ.get("POST_FORMAT", "summary")
+        return jsonify({"format": fmt})
 
 
 @app.route("/api/test-scrape")

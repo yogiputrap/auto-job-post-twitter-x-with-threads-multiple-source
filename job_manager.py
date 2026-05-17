@@ -15,12 +15,14 @@ from datetime import datetime, timezone
 from typing import List, Tuple
 
 from config import AppConfig
-from formatter import format_tweet, format_thread
+from formatter import format_tweet, format_thread, format_summary_post
 from job_store import JobStore
 from models import JobListing
 from scraper import fetch_all
 from scraper.base import FallbackJobSource, JobSource
 from twitter_client import PostResult, Poster, ThreadResult
+
+from pathlib import Path
 
 
 @dataclass
@@ -100,7 +102,10 @@ class JobManager:
         self._logger = logging.getLogger(__name__)
 
         # Install credential redaction filter
-        secrets = [config.zernio_api_key.get_secret_value()]
+        secrets = [
+            config.zernio_api_key.get_secret_value(),
+            config.groq_api_key.get_secret_value(),
+        ]
         self._redaction_filter = CredentialRedactionFilter(secrets)
         self._logger.addFilter(self._redaction_filter)
 
@@ -137,7 +142,15 @@ class JobManager:
                     if not first_post:
                         self._sleep_func(self._config.inter_post_delay_seconds)
 
-                    thread_tweets: list[str] = format_thread(listing)
+                    # Read current format preference (can be changed via dashboard)
+                    format_file = Path("post_format.txt")
+                    current_format = format_file.read_text().strip() if format_file.exists() else self._config.post_format
+
+                    thread_tweets: list[str] = format_thread(
+                        listing,
+                        post_format=current_format,
+                        groq_api_key=self._config.groq_api_key.get_secret_value(),
+                    )
                     thread_result: ThreadResult = self._poster.post_thread(thread_tweets)
 
                     if thread_result.success:

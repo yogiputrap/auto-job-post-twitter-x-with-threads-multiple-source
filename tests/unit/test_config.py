@@ -20,6 +20,7 @@ class TestAppConfigDefaults:
         assert config.listings_per_source == 10
         assert config.inter_post_delay_seconds == 5
         assert config.inter_request_delay_seconds == 2
+        assert config.post_format == "summary"
 
     def test_reads_required_vars(self, full_env):
         config = AppConfig()

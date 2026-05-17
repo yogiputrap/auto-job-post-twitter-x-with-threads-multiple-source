@@ -7,3 +7,4 @@ __pycache__/
 .github/
 .kiro/specs/
 post_schedule.json
+post_format.txt
