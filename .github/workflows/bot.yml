@@ -1,0 +1,40 @@
+name: Job Vacancy Twitter Bot
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Every hour (configurable)
+  workflow_dispatch: {}
+
+jobs:
+  post-jobs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Playwright browsers
+        run: playwright install chromium --with-deps
+
+      - name: Restore posted_jobs.sqlite cache
+        uses: actions/cache@v4
+        with:
+          path: posted_jobs.sqlite
+          key: posted-jobs-${{ github.ref }}
+          restore-keys: |
+            posted-jobs-
+
+      - name: Run bot
+        env:
+          OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
+          X_CLIENT_ID: ${{ secrets.X_CLIENT_ID }}
+          X_CLIENT_SECRET: ${{ secrets.X_CLIENT_SECRET }}
+          INDEED_SEARCH_URL: ${{ vars.INDEED_SEARCH_URL }}
+          GLINTS_SEARCH_URL: ${{ vars.GLINTS_SEARCH_URL }}
+        run: python main.py

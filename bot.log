@@ -1,0 +1,346 @@
+2026-05-17 08:55:32,313 INFO werkzeug [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.100.85:5000
+2026-05-17 08:55:32,313 INFO werkzeug [33mPress CTRL+C to quit[0m
+2026-05-17 08:55:38,574 INFO werkzeug 127.0.0.1 - - [17/May/2026 08:55:38] "GET / HTTP/1.1" 200 -
+2026-05-17 08:55:55,054 INFO scraper.httpx_scraper GlintsHTTPSource.fetch: url=https://glints.com/id/job-category/marketing limit=5
+2026-05-17 08:55:55,359 INFO httpx HTTP Request: GET https://glints.com/api/v1/opportunities?keyword=remote&country=ID&limit=5&offset=0&workArrangement=REMOTE "HTTP/1.1 403 Forbidden"
+2026-05-17 08:55:55,478 WARNING scraper.httpx_scraper Glints API returned 403, trying HTML fallback
+2026-05-17 08:55:55,680 INFO httpx HTTP Request: GET https://glints.com/id/job-category/marketing "HTTP/1.1 403 Forbidden"
+2026-05-17 08:55:55,808 WARNING scraper.httpx_scraper Glints HTML fallback failed: Client error '403 Forbidden' for url 'https://glints.com/id/job-category/marketing'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403
+2026-05-17 08:55:55,809 INFO scraper.httpx_scraper GlintsHTTPSource.fetch returning 0 listing(s)
+2026-05-17 08:55:55,810 INFO werkzeug 127.0.0.1 - - [17/May/2026 08:55:55] "GET /api/test-scrape?source=glints&glints_url=https://glints.com/id/job-category/marketing HTTP/1.1" 200 -
+2026-05-17 08:56:07,680 INFO scraper.httpx_scraper IndeedHTTPSource.fetch: url=https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia limit=5
+2026-05-17 08:56:07,827 INFO httpx HTTP Request: GET https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia "HTTP/1.1 403 Forbidden"
+2026-05-17 08:56:07,832 WARNING scraper Primary source indeed-http failed: Client error '403 Forbidden' for url 'https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403; falling back to indeed-rss
+2026-05-17 08:56:07,833 INFO scraper.indeed IndeedRSSSource.fetch starting: url=https://id.indeed.com/rss?q=remote+work+from+home&l=Indonesia limit=5
+2026-05-17 08:56:07,833 ERROR scraper Fallback source indeed-rss also failed: No module named 'feedparser'; skipping pair
+2026-05-17 08:56:07,833 INFO scraper.httpx_scraper GlintsHTTPSource.fetch: url=https://glints.com/id/job-category/marketing limit=5
+2026-05-17 08:56:08,012 INFO httpx HTTP Request: GET https://glints.com/api/v1/opportunities?keyword=remote&country=ID&limit=5&offset=0&workArrangement=REMOTE "HTTP/1.1 403 Forbidden"
+2026-05-17 08:56:08,135 WARNING scraper.httpx_scraper Glints API returned 403, trying HTML fallback
+2026-05-17 08:56:08,311 INFO httpx HTTP Request: GET https://glints.com/id/job-category/marketing "HTTP/1.1 403 Forbidden"
+2026-05-17 08:56:08,437 WARNING scraper.httpx_scraper Glints HTML fallback failed: Client error '403 Forbidden' for url 'https://glints.com/id/job-category/marketing'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403
+2026-05-17 08:56:08,437 INFO scraper.httpx_scraper GlintsHTTPSource.fetch returning 0 listing(s)
+2026-05-17 08:56:08,438 INFO werkzeug 127.0.0.1 - - [17/May/2026 08:56:08] "GET /api/test-scrape?source=all&glints_url=https://glints.com/id/job-category/marketing HTTP/1.1" 200 -
+2026-05-17 08:56:29,126 INFO scraper.httpx_scraper IndeedHTTPSource.fetch: url=https://id.indeed.com/jobs?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622 limit=5
+2026-05-17 08:56:29,280 INFO httpx HTTP Request: GET https://id.indeed.com/jobs?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622 "HTTP/1.1 403 Forbidden"
+2026-05-17 08:56:29,283 WARNING scraper Primary source indeed-http failed: Client error '403 Forbidden' for url 'https://id.indeed.com/jobs?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403; falling back to indeed-rss
+2026-05-17 08:56:29,284 INFO scraper.indeed IndeedRSSSource.fetch starting: url=https://id.indeed.com/rss?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622 limit=5
+2026-05-17 08:56:29,285 ERROR scraper Fallback source indeed-rss also failed: No module named 'feedparser'; skipping pair
+2026-05-17 08:56:29,287 INFO werkzeug 127.0.0.1 - - [17/May/2026 08:56:29] "GET /api/test-scrape?source=indeed&indeed_url=https://id.indeed.com/jobs?q%3D%26l%3DRemote%26from%3DsearchOnHP%252Cwhereautocomplete%26vjk%3D35f08231c3b37622&glints_url=https://glints.com/id/job-category/marketing HTTP/1.1" 200 -
+2026-05-17 08:56:30,015 INFO scraper.httpx_scraper IndeedHTTPSource.fetch: url=https://id.indeed.com/jobs?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622 limit=5
+2026-05-17 08:56:30,156 INFO httpx HTTP Request: GET https://id.indeed.com/jobs?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622 "HTTP/1.1 403 Forbidden"
+2026-05-17 08:56:30,158 WARNING scraper Primary source indeed-http failed: Client error '403 Forbidden' for url 'https://id.indeed.com/jobs?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403; falling back to indeed-rss
+2026-05-17 08:56:30,158 INFO scraper.indeed IndeedRSSSource.fetch starting: url=https://id.indeed.com/rss?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622 limit=5
+2026-05-17 08:56:30,158 ERROR scraper Fallback source indeed-rss also failed: No module named 'feedparser'; skipping pair
+2026-05-17 08:56:30,158 INFO werkzeug 127.0.0.1 - - [17/May/2026 08:56:30] "GET /api/test-scrape?source=indeed&indeed_url=https://id.indeed.com/jobs?q%3D%26l%3DRemote%26from%3DsearchOnHP%252Cwhereautocomplete%26vjk%3D35f08231c3b37622&glints_url=https://glints.com/id/job-category/marketing HTTP/1.1" 200 -
+2026-05-17 08:56:30,667 INFO scraper.httpx_scraper IndeedHTTPSource.fetch: url=https://id.indeed.com/jobs?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622 limit=5
+2026-05-17 08:56:30,807 INFO httpx HTTP Request: GET https://id.indeed.com/jobs?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622 "HTTP/1.1 403 Forbidden"
+2026-05-17 08:56:30,810 WARNING scraper Primary source indeed-http failed: Client error '403 Forbidden' for url 'https://id.indeed.com/jobs?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403; falling back to indeed-rss
+2026-05-17 08:56:30,810 INFO scraper.indeed IndeedRSSSource.fetch starting: url=https://id.indeed.com/rss?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622 limit=5
+2026-05-17 08:56:30,811 ERROR scraper Fallback source indeed-rss also failed: No module named 'feedparser'; skipping pair
+2026-05-17 08:56:30,811 INFO werkzeug 127.0.0.1 - - [17/May/2026 08:56:30] "GET /api/test-scrape?source=indeed&indeed_url=https://id.indeed.com/jobs?q%3D%26l%3DRemote%26from%3DsearchOnHP%252Cwhereautocomplete%26vjk%3D35f08231c3b37622&glints_url=https://glints.com/id/job-category/marketing HTTP/1.1" 200 -
+2026-05-17 08:56:34,613 INFO scraper.httpx_scraper IndeedHTTPSource.fetch: url=https://id.indeed.com/jobs?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622 limit=5
+2026-05-17 08:56:34,743 INFO httpx HTTP Request: GET https://id.indeed.com/jobs?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622 "HTTP/1.1 403 Forbidden"
+2026-05-17 08:56:34,746 WARNING scraper Primary source indeed-http failed: Client error '403 Forbidden' for url 'https://id.indeed.com/jobs?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403; falling back to indeed-rss
+2026-05-17 08:56:34,746 INFO scraper.indeed IndeedRSSSource.fetch starting: url=https://id.indeed.com/rss?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622 limit=5
+2026-05-17 08:56:34,747 ERROR scraper Fallback source indeed-rss also failed: No module named 'feedparser'; skipping pair
+2026-05-17 08:56:34,747 INFO werkzeug 127.0.0.1 - - [17/May/2026 08:56:34] "GET /api/test-scrape?source=indeed&indeed_url=https://id.indeed.com/jobs?q%3D%26l%3DRemote%26from%3DsearchOnHP%252Cwhereautocomplete%26vjk%3D35f08231c3b37622&glints_url=https://glints.com/id/job-category/marketing HTTP/1.1" 200 -
+2026-05-17 08:56:35,233 INFO scraper.httpx_scraper IndeedHTTPSource.fetch: url=https://id.indeed.com/jobs?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622 limit=5
+2026-05-17 08:56:35,365 INFO httpx HTTP Request: GET https://id.indeed.com/jobs?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622 "HTTP/1.1 403 Forbidden"
+2026-05-17 08:56:35,367 WARNING scraper Primary source indeed-http failed: Client error '403 Forbidden' for url 'https://id.indeed.com/jobs?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403; falling back to indeed-rss
+2026-05-17 08:56:35,367 INFO scraper.indeed IndeedRSSSource.fetch starting: url=https://id.indeed.com/rss?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622 limit=5
+2026-05-17 08:56:35,367 ERROR scraper Fallback source indeed-rss also failed: No module named 'feedparser'; skipping pair
+2026-05-17 08:56:35,367 INFO werkzeug 127.0.0.1 - - [17/May/2026 08:56:35] "GET /api/test-scrape?source=indeed&indeed_url=https://id.indeed.com/jobs?q%3D%26l%3DRemote%26from%3DsearchOnHP%252Cwhereautocomplete%26vjk%3D35f08231c3b37622&glints_url=https://glints.com/id/job-category/marketing HTTP/1.1" 200 -
+2026-05-17 08:56:35,677 INFO scraper.httpx_scraper IndeedHTTPSource.fetch: url=https://id.indeed.com/jobs?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622 limit=5
+2026-05-17 08:56:35,806 INFO httpx HTTP Request: GET https://id.indeed.com/jobs?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622 "HTTP/1.1 403 Forbidden"
+2026-05-17 08:56:35,808 WARNING scraper Primary source indeed-http failed: Client error '403 Forbidden' for url 'https://id.indeed.com/jobs?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403; falling back to indeed-rss
+2026-05-17 08:56:35,808 INFO scraper.indeed IndeedRSSSource.fetch starting: url=https://id.indeed.com/rss?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622 limit=5
+2026-05-17 08:56:35,809 ERROR scraper Fallback source indeed-rss also failed: No module named 'feedparser'; skipping pair
+2026-05-17 08:56:35,809 INFO werkzeug 127.0.0.1 - - [17/May/2026 08:56:35] "GET /api/test-scrape?source=indeed&indeed_url=https://id.indeed.com/jobs?q%3D%26l%3DRemote%26from%3DsearchOnHP%252Cwhereautocomplete%26vjk%3D35f08231c3b37622&glints_url=https://glints.com/id/job-category/marketing HTTP/1.1" 200 -
+2026-05-17 08:56:35,898 INFO scraper.httpx_scraper IndeedHTTPSource.fetch: url=https://id.indeed.com/jobs?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622 limit=5
+2026-05-17 08:56:36,035 INFO httpx HTTP Request: GET https://id.indeed.com/jobs?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622 "HTTP/1.1 403 Forbidden"
+2026-05-17 08:56:36,038 WARNING scraper Primary source indeed-http failed: Client error '403 Forbidden' for url 'https://id.indeed.com/jobs?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403; falling back to indeed-rss
+2026-05-17 08:56:36,038 INFO scraper.indeed IndeedRSSSource.fetch starting: url=https://id.indeed.com/rss?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622 limit=5
+2026-05-17 08:56:36,038 ERROR scraper Fallback source indeed-rss also failed: No module named 'feedparser'; skipping pair
+2026-05-17 08:56:36,039 INFO werkzeug 127.0.0.1 - - [17/May/2026 08:56:36] "GET /api/test-scrape?source=indeed&indeed_url=https://id.indeed.com/jobs?q%3D%26l%3DRemote%26from%3DsearchOnHP%252Cwhereautocomplete%26vjk%3D35f08231c3b37622&glints_url=https://glints.com/id/job-category/marketing HTTP/1.1" 200 -
+2026-05-17 08:56:36,096 INFO scraper.httpx_scraper IndeedHTTPSource.fetch: url=https://id.indeed.com/jobs?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622 limit=5
+2026-05-17 08:56:36,226 INFO httpx HTTP Request: GET https://id.indeed.com/jobs?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622 "HTTP/1.1 403 Forbidden"
+2026-05-17 08:56:36,229 WARNING scraper Primary source indeed-http failed: Client error '403 Forbidden' for url 'https://id.indeed.com/jobs?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403; falling back to indeed-rss
+2026-05-17 08:56:36,229 INFO scraper.indeed IndeedRSSSource.fetch starting: url=https://id.indeed.com/rss?q=&l=Remote&from=searchOnHP%2Cwhereautocomplete&vjk=35f08231c3b37622 limit=5
+2026-05-17 08:56:36,229 ERROR scraper Fallback source indeed-rss also failed: No module named 'feedparser'; skipping pair
+2026-05-17 08:56:36,230 INFO werkzeug 127.0.0.1 - - [17/May/2026 08:56:36] "GET /api/test-scrape?source=indeed&indeed_url=https://id.indeed.com/jobs?q%3D%26l%3DRemote%26from%3DsearchOnHP%252Cwhereautocomplete%26vjk%3D35f08231c3b37622&glints_url=https://glints.com/id/job-category/marketing HTTP/1.1" 200 -
+2026-05-17 09:01:23,192 INFO werkzeug [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.100.85:5000
+2026-05-17 09:01:23,192 INFO werkzeug [33mPress CTRL+C to quit[0m
+2026-05-17 09:02:06,362 INFO scraper.httpx_scraper IndeedHTTPSource.fetch: url=https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia limit=5
+2026-05-17 09:02:06,540 INFO httpx HTTP Request: GET https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia "HTTP/1.1 403 Forbidden"
+2026-05-17 09:02:06,543 WARNING scraper Primary source indeed-http failed: Client error '403 Forbidden' for url 'https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403; falling back to remotive
+2026-05-17 09:02:06,543 INFO scraper.httpx_scraper RemotiveSource.fetch: category=software-dev limit=5
+2026-05-17 09:02:06,657 INFO httpx HTTP Request: GET https://remotive.com/api/remote-jobs?category=software-dev&limit=5 "HTTP/1.1 200 OK"
+2026-05-17 09:02:06,663 INFO scraper.httpx_scraper RemotiveSource.fetch returning 5 listing(s)
+2026-05-17 09:02:06,664 INFO werkzeug 127.0.0.1 - - [17/May/2026 09:02:06] "GET /api/test-scrape?source=indeed HTTP/1.1" 200 -
+2026-05-17 09:18:57,468 INFO werkzeug 127.0.0.1 - - [17/May/2026 09:18:57] "GET / HTTP/1.1" 200 -
+2026-05-17 09:19:09,575 INFO werkzeug 127.0.0.1 - - [17/May/2026 09:19:09] "GET / HTTP/1.1" 200 -
+2026-05-17 09:19:13,011 INFO scraper.httpx_scraper IndeedHTTPSource.fetch: url=https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia limit=5
+2026-05-17 09:19:13,187 INFO httpx HTTP Request: GET https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia "HTTP/1.1 403 Forbidden"
+2026-05-17 09:19:13,191 WARNING scraper Primary source indeed-http failed: Client error '403 Forbidden' for url 'https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403; falling back to remotive
+2026-05-17 09:19:13,191 INFO scraper.httpx_scraper RemotiveSource.fetch: category=software-dev limit=5
+2026-05-17 09:19:13,345 INFO httpx HTTP Request: GET https://remotive.com/api/remote-jobs?category=software-dev&limit=5 "HTTP/1.1 200 OK"
+2026-05-17 09:19:13,355 INFO scraper.httpx_scraper RemotiveSource.fetch returning 5 listing(s)
+2026-05-17 09:19:13,355 INFO scraper.httpx_scraper GlintsHTTPSource.fetch: url=https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE limit=5
+2026-05-17 09:19:13,527 INFO httpx HTTP Request: GET https://glints.com/api/v1/opportunities?keyword=remote&country=ID&limit=5&offset=0&workArrangement=REMOTE "HTTP/1.1 403 Forbidden"
+2026-05-17 09:19:13,706 WARNING scraper.httpx_scraper Glints API returned 403, trying HTML fallback
+2026-05-17 09:19:13,883 INFO httpx HTTP Request: GET https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE "HTTP/1.1 403 Forbidden"
+2026-05-17 09:19:14,009 WARNING scraper.httpx_scraper Glints HTML fallback failed: Client error '403 Forbidden' for url 'https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403
+2026-05-17 09:19:14,010 INFO scraper.httpx_scraper GlintsHTTPSource.fetch returning 0 listing(s)
+2026-05-17 09:19:14,012 INFO werkzeug 127.0.0.1 - - [17/May/2026 09:19:14] "GET /api/test-scrape?source=all HTTP/1.1" 200 -
+2026-05-17 09:46:02,677 INFO werkzeug [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.100.85:5000
+2026-05-17 09:46:02,677 INFO werkzeug [33mPress CTRL+C to quit[0m
+2026-05-17 09:46:14,115 INFO scraper.httpx_scraper IndeedHTTPSource.fetch: url=https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia limit=5
+2026-05-17 09:46:14,298 INFO httpx HTTP Request: GET https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia "HTTP/1.1 403 Forbidden"
+2026-05-17 09:46:14,301 WARNING scraper Primary source indeed-http failed: Client error '403 Forbidden' for url 'https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403; falling back to remotive
+2026-05-17 09:46:14,301 INFO scraper.httpx_scraper RemotiveSource.fetch: category=software-dev limit=5
+2026-05-17 09:46:14,423 INFO httpx HTTP Request: GET https://remotive.com/api/remote-jobs?category=software-dev&limit=5 "HTTP/1.1 200 OK"
+2026-05-17 09:46:14,427 INFO scraper.httpx_scraper RemotiveSource.fetch returning 5 listing(s)
+2026-05-17 09:46:14,428 INFO scraper.httpx_scraper GlintsHTTPSource.fetch: url=https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE limit=5
+2026-05-17 09:46:14,607 INFO httpx HTTP Request: GET https://glints.com/api/v1/opportunities?keyword=remote&country=ID&limit=5&offset=0&workArrangement=REMOTE "HTTP/1.1 403 Forbidden"
+2026-05-17 09:46:14,716 WARNING scraper.httpx_scraper Glints API returned 403, trying HTML fallback
+2026-05-17 09:46:14,870 INFO httpx HTTP Request: GET https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE "HTTP/1.1 403 Forbidden"
+2026-05-17 09:46:15,000 WARNING scraper.httpx_scraper Glints HTML fallback failed: Client error '403 Forbidden' for url 'https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403
+2026-05-17 09:46:15,000 INFO scraper.httpx_scraper GlintsHTTPSource.fetch returning 0 listing(s)
+2026-05-17 09:46:15,001 INFO werkzeug 127.0.0.1 - - [17/May/2026 09:46:15] "GET /api/test-scrape?source=all HTTP/1.1" 200 -
+2026-05-17 09:46:25,211 INFO scraper.httpx_scraper GlintsHTTPSource.fetch: url=https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE limit=5
+2026-05-17 09:46:25,416 INFO httpx HTTP Request: GET https://glints.com/api/v1/opportunities?keyword=remote&country=ID&limit=5&offset=0&workArrangement=REMOTE "HTTP/1.1 403 Forbidden"
+2026-05-17 09:46:25,523 WARNING scraper.httpx_scraper Glints API returned 403, trying HTML fallback
+2026-05-17 09:46:25,684 INFO httpx HTTP Request: GET https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE "HTTP/1.1 403 Forbidden"
+2026-05-17 09:46:25,797 WARNING scraper.httpx_scraper Glints HTML fallback failed: Client error '403 Forbidden' for url 'https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403
+2026-05-17 09:46:25,798 INFO scraper.httpx_scraper GlintsHTTPSource.fetch returning 0 listing(s)
+2026-05-17 09:46:25,798 INFO werkzeug 127.0.0.1 - - [17/May/2026 09:46:25] "GET /api/test-scrape?source=glints HTTP/1.1" 200 -
+2026-05-17 09:47:21,541 INFO werkzeug [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.100.85:5000
+2026-05-17 09:47:21,541 INFO werkzeug [33mPress CTRL+C to quit[0m
+2026-05-17 09:47:32,437 INFO scraper.httpx_scraper IndeedHTTPSource.fetch: url=https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia limit=5
+2026-05-17 09:47:32,627 INFO httpx HTTP Request: GET https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia "HTTP/1.1 403 Forbidden"
+2026-05-17 09:47:32,629 WARNING scraper Primary source indeed-http failed: Client error '403 Forbidden' for url 'https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403; falling back to remotive
+2026-05-17 09:47:32,629 INFO scraper.httpx_scraper RemotiveSource.fetch: category=software-dev limit=5
+2026-05-17 09:47:32,746 INFO httpx HTTP Request: GET https://remotive.com/api/remote-jobs?category=software-dev&limit=5 "HTTP/1.1 200 OK"
+2026-05-17 09:47:32,751 INFO scraper.httpx_scraper RemotiveSource.fetch returning 5 listing(s)
+2026-05-17 09:47:32,751 INFO scraper.httpx_scraper GlintsHTTPSource.fetch: url=https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE limit=5
+2026-05-17 09:47:32,942 INFO httpx HTTP Request: GET https://glints.com/api/v1/opportunities?keyword=remote&country=ID&limit=5&offset=0&workArrangement=REMOTE "HTTP/1.1 403 Forbidden"
+2026-05-17 09:47:33,094 WARNING scraper.httpx_scraper Glints API returned 403, trying HTML fallback
+2026-05-17 09:47:33,275 INFO httpx HTTP Request: GET https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE "HTTP/1.1 403 Forbidden"
+2026-05-17 09:47:33,416 WARNING scraper.httpx_scraper Glints HTML fallback failed: Client error '403 Forbidden' for url 'https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403
+2026-05-17 09:47:33,416 WARNING scraper Primary source glints-http failed: Glints API returned 403 and HTML fallback also failed; falling back to jobicy
+2026-05-17 09:47:33,416 INFO scraper.httpx_scraper JobicySource.fetch: tag=developer limit=5
+2026-05-17 09:47:33,522 INFO httpx HTTP Request: GET https://jobicy.com/api/v2/remote-jobs?count=5&tag=developer "HTTP/1.1 200 OK"
+2026-05-17 09:47:33,525 INFO scraper.httpx_scraper JobicySource.fetch returning 5 listing(s)
+2026-05-17 09:47:33,526 INFO werkzeug 127.0.0.1 - - [17/May/2026 09:47:33] "GET /api/test-scrape?source=all HTTP/1.1" 200 -
+2026-05-17 09:48:00,006 INFO werkzeug 127.0.0.1 - - [17/May/2026 09:48:00] "GET / HTTP/1.1" 200 -
+2026-05-17 09:48:01,941 INFO scraper.httpx_scraper IndeedHTTPSource.fetch: url=https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia limit=5
+2026-05-17 09:48:02,092 INFO httpx HTTP Request: GET https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia "HTTP/1.1 403 Forbidden"
+2026-05-17 09:48:02,094 WARNING scraper Primary source indeed-http failed: Client error '403 Forbidden' for url 'https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403; falling back to remotive
+2026-05-17 09:48:02,094 INFO scraper.httpx_scraper RemotiveSource.fetch: category=software-dev limit=5
+2026-05-17 09:48:02,228 INFO httpx HTTP Request: GET https://remotive.com/api/remote-jobs?category=software-dev&limit=5 "HTTP/1.1 200 OK"
+2026-05-17 09:48:02,236 INFO scraper.httpx_scraper RemotiveSource.fetch returning 5 listing(s)
+2026-05-17 09:48:02,236 INFO scraper.httpx_scraper GlintsHTTPSource.fetch: url=https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE limit=5
+2026-05-17 09:48:02,482 INFO httpx HTTP Request: GET https://glints.com/api/v1/opportunities?keyword=remote&country=ID&limit=5&offset=0&workArrangement=REMOTE "HTTP/1.1 403 Forbidden"
+2026-05-17 09:48:02,608 WARNING scraper.httpx_scraper Glints API returned 403, trying HTML fallback
+2026-05-17 09:48:02,813 INFO httpx HTTP Request: GET https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE "HTTP/1.1 403 Forbidden"
+2026-05-17 09:48:02,928 WARNING scraper.httpx_scraper Glints HTML fallback failed: Client error '403 Forbidden' for url 'https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403
+2026-05-17 09:48:02,928 WARNING scraper Primary source glints-http failed: Glints API returned 403 and HTML fallback also failed; falling back to jobicy
+2026-05-17 09:48:02,928 INFO scraper.httpx_scraper JobicySource.fetch: tag=developer limit=5
+2026-05-17 09:48:03,063 INFO httpx HTTP Request: GET https://jobicy.com/api/v2/remote-jobs?count=5&tag=developer "HTTP/1.1 200 OK"
+2026-05-17 09:48:03,065 INFO scraper.httpx_scraper JobicySource.fetch returning 5 listing(s)
+2026-05-17 09:48:03,066 INFO werkzeug 127.0.0.1 - - [17/May/2026 09:48:03] "GET /api/test-scrape?source=all HTTP/1.1" 200 -
+2026-05-17 09:50:48,176 INFO werkzeug [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.100.85:5000
+2026-05-17 09:50:48,176 INFO werkzeug [33mPress CTRL+C to quit[0m
+2026-05-17 09:50:59,669 INFO werkzeug 127.0.0.1 - - [17/May/2026 09:50:59] "GET / HTTP/1.1" 200 -
+2026-05-17 09:51:01,249 INFO scraper.httpx_scraper IndeedHTTPSource.fetch: url=https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia limit=5
+2026-05-17 09:51:01,498 INFO httpx HTTP Request: GET https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia "HTTP/1.1 403 Forbidden"
+2026-05-17 09:51:01,500 WARNING scraper Primary source indeed-http failed: Client error '403 Forbidden' for url 'https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403; falling back to remotive
+2026-05-17 09:51:01,501 INFO scraper.httpx_scraper RemotiveSource.fetch: category=software-dev limit=5
+2026-05-17 09:51:01,624 INFO httpx HTTP Request: GET https://remotive.com/api/remote-jobs?category=software-dev&limit=5 "HTTP/1.1 200 OK"
+2026-05-17 09:51:01,632 INFO scraper.httpx_scraper RemotiveSource.fetch returning 5 listing(s)
+2026-05-17 09:51:01,632 INFO scraper.httpx_scraper GlintsHTTPSource.fetch: url=https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE limit=5
+2026-05-17 09:51:01,834 INFO httpx HTTP Request: GET https://glints.com/api/v1/opportunities?keyword=remote&country=ID&limit=5&offset=0&workArrangement=REMOTE "HTTP/1.1 403 Forbidden"
+2026-05-17 09:51:02,014 WARNING scraper.httpx_scraper Glints API returned 403, trying HTML fallback
+2026-05-17 09:51:02,203 INFO httpx HTTP Request: GET https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE "HTTP/1.1 403 Forbidden"
+2026-05-17 09:51:02,344 WARNING scraper.httpx_scraper Glints HTML fallback failed: Client error '403 Forbidden' for url 'https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403
+2026-05-17 09:51:02,345 WARNING scraper Primary source glints-http failed: Glints API returned 403 and HTML fallback also failed; falling back to jobicy
+2026-05-17 09:51:02,345 INFO scraper.httpx_scraper JobicySource.fetch: tag=developer limit=5
+2026-05-17 09:51:02,479 INFO httpx HTTP Request: GET https://jobicy.com/api/v2/remote-jobs?count=5&tag=developer "HTTP/1.1 200 OK"
+2026-05-17 09:51:02,484 INFO scraper.httpx_scraper JobicySource.fetch returning 5 listing(s)
+2026-05-17 09:51:02,485 INFO werkzeug 127.0.0.1 - - [17/May/2026 09:51:02] "GET /api/test-scrape?source=all HTTP/1.1" 200 -
+2026-05-17 09:52:45,025 INFO werkzeug [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.100.85:5000
+2026-05-17 09:52:45,025 INFO werkzeug [33mPress CTRL+C to quit[0m
+2026-05-17 09:53:08,307 INFO scraper.httpx_scraper GlintsHTTPSource.fetch: url=https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE limit=5
+2026-05-17 09:53:08,634 INFO httpx HTTP Request: GET https://glints.com/api/v1/opportunities?keyword=remote&country=ID&limit=5&offset=0&workArrangement=REMOTE "HTTP/1.1 403 Forbidden"
+2026-05-17 09:53:08,741 WARNING scraper.httpx_scraper Glints API returned 403, trying HTML fallback
+2026-05-17 09:53:08,936 INFO httpx HTTP Request: GET https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE "HTTP/1.1 403 Forbidden"
+2026-05-17 09:53:09,073 WARNING scraper.httpx_scraper Glints HTML fallback failed: Client error '403 Forbidden' for url 'https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403
+2026-05-17 09:53:09,074 WARNING scraper Primary source glints-http failed: Glints API returned 403 and HTML fallback also failed; falling back to jobicy
+2026-05-17 09:53:09,074 INFO scraper.httpx_scraper JobicySource.fetch: tag=developer limit=5
+2026-05-17 09:53:09,237 INFO httpx HTTP Request: GET https://jobicy.com/api/v2/remote-jobs?count=5&tag=developer "HTTP/1.1 200 OK"
+2026-05-17 09:53:09,242 INFO scraper.httpx_scraper JobicySource.fetch returning 5 listing(s)
+2026-05-17 09:53:09,244 INFO werkzeug 127.0.0.1 - - [17/May/2026 09:53:09] "GET /api/test-scrape?source=glints HTTP/1.1" 200 -
+2026-05-17 09:53:13,057 INFO scraper.httpx_scraper IndeedHTTPSource.fetch: url=https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia limit=5
+2026-05-17 09:53:13,201 INFO httpx HTTP Request: GET https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia "HTTP/1.1 403 Forbidden"
+2026-05-17 09:53:13,206 WARNING scraper Primary source indeed-http failed: Client error '403 Forbidden' for url 'https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403; falling back to remotive
+2026-05-17 09:53:13,206 INFO scraper.httpx_scraper RemotiveSource.fetch: category=software-dev limit=5
+2026-05-17 09:53:13,376 INFO httpx HTTP Request: GET https://remotive.com/api/remote-jobs?category=software-dev&limit=5 "HTTP/1.1 200 OK"
+2026-05-17 09:53:13,389 INFO scraper.httpx_scraper RemotiveSource.fetch returning 5 listing(s)
+2026-05-17 09:53:13,390 INFO werkzeug 127.0.0.1 - - [17/May/2026 09:53:13] "GET /api/test-scrape?source=indeed HTTP/1.1" 200 -
+2026-05-17 09:53:26,872 INFO scraper.httpx_scraper GlintsHTTPSource.fetch: url=https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE limit=5
+2026-05-17 09:53:27,053 INFO httpx HTTP Request: GET https://glints.com/api/v1/opportunities?keyword=remote&country=ID&limit=5&offset=0&workArrangement=REMOTE "HTTP/1.1 403 Forbidden"
+2026-05-17 09:53:27,171 WARNING scraper.httpx_scraper Glints API returned 403, trying HTML fallback
+2026-05-17 09:53:27,362 INFO httpx HTTP Request: GET https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE "HTTP/1.1 403 Forbidden"
+2026-05-17 09:53:27,476 WARNING scraper.httpx_scraper Glints HTML fallback failed: Client error '403 Forbidden' for url 'https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403
+2026-05-17 09:53:27,476 WARNING scraper Primary source glints-http failed: Glints API returned 403 and HTML fallback also failed; falling back to jobicy
+2026-05-17 09:53:27,476 INFO scraper.httpx_scraper JobicySource.fetch: tag=developer limit=5
+2026-05-17 09:53:27,610 INFO httpx HTTP Request: GET https://jobicy.com/api/v2/remote-jobs?count=5&tag=developer "HTTP/1.1 200 OK"
+2026-05-17 09:53:27,612 INFO scraper.httpx_scraper JobicySource.fetch returning 5 listing(s)
+2026-05-17 09:53:27,613 INFO werkzeug 127.0.0.1 - - [17/May/2026 09:53:27] "GET /api/test-scrape?source=glints HTTP/1.1" 200 -
+2026-05-17 10:05:02,953 INFO scraper.httpx_scraper IndeedHTTPSource.fetch: url=https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia limit=5
+2026-05-17 10:05:03,108 INFO httpx HTTP Request: GET https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia "HTTP/1.1 403 Forbidden"
+2026-05-17 10:05:03,110 WARNING scraper Primary source indeed-http failed: Client error '403 Forbidden' for url 'https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403; falling back to remotive
+2026-05-17 10:05:03,111 INFO scraper.httpx_scraper RemotiveSource.fetch: category=software-dev limit=5
+2026-05-17 10:05:03,229 INFO httpx HTTP Request: GET https://remotive.com/api/remote-jobs?category=software-dev&limit=5 "HTTP/1.1 200 OK"
+2026-05-17 10:05:03,238 INFO scraper.httpx_scraper RemotiveSource.fetch returning 5 listing(s)
+2026-05-17 10:05:03,238 INFO scraper.httpx_scraper GlintsHTTPSource.fetch: url=https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE limit=5
+2026-05-17 10:05:03,500 INFO httpx HTTP Request: GET https://glints.com/api/v1/opportunities?keyword=remote&country=ID&limit=5&offset=0&workArrangement=REMOTE "HTTP/1.1 403 Forbidden"
+2026-05-17 10:05:03,693 WARNING scraper.httpx_scraper Glints API returned 403, trying HTML fallback
+2026-05-17 10:05:03,844 INFO httpx HTTP Request: GET https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE "HTTP/1.1 403 Forbidden"
+2026-05-17 10:05:04,043 WARNING scraper.httpx_scraper Glints HTML fallback failed: Client error '403 Forbidden' for url 'https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403
+2026-05-17 10:05:04,043 WARNING scraper Primary source glints-http failed: Glints API returned 403 and HTML fallback also failed; falling back to jobicy
+2026-05-17 10:05:04,043 INFO scraper.httpx_scraper JobicySource.fetch: tag=developer limit=5
+2026-05-17 10:05:04,151 INFO httpx HTTP Request: GET https://jobicy.com/api/v2/remote-jobs?count=5&tag=developer "HTTP/1.1 200 OK"
+2026-05-17 10:05:04,152 INFO scraper.httpx_scraper JobicySource.fetch returning 5 listing(s)
+2026-05-17 10:05:04,155 INFO werkzeug 127.0.0.1 - - [17/May/2026 10:05:04] "GET /api/test-scrape?source=all HTTP/1.1" 200 -
+2026-05-17 10:08:18,468 INFO werkzeug [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.100.85:5000
+2026-05-17 10:08:18,468 INFO werkzeug [33mPress CTRL+C to quit[0m
+2026-05-17 10:08:42,355 INFO werkzeug 127.0.0.1 - - [17/May/2026 10:08:42] "GET / HTTP/1.1" 200 -
+2026-05-17 10:08:55,513 INFO werkzeug 127.0.0.1 - - [17/May/2026 10:08:55] "GET /api/health HTTP/1.1" 200 -
+2026-05-17 10:09:17,585 INFO scraper.httpx_scraper IndeedHTTPSource.fetch: url=https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia limit=5
+2026-05-17 10:09:17,816 INFO httpx HTTP Request: GET https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia "HTTP/1.1 403 Forbidden"
+2026-05-17 10:09:17,819 WARNING scraper Primary source indeed-http failed: Client error '403 Forbidden' for url 'https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403; falling back to remotive
+2026-05-17 10:09:17,819 INFO scraper.httpx_scraper RemotiveSource.fetch: category=software-dev limit=5
+2026-05-17 10:09:17,941 INFO httpx HTTP Request: GET https://remotive.com/api/remote-jobs?category=software-dev&limit=5 "HTTP/1.1 200 OK"
+2026-05-17 10:09:17,947 INFO scraper.httpx_scraper RemotiveSource.fetch returning 5 listing(s)
+2026-05-17 10:09:17,947 INFO scraper.httpx_scraper GlintsHTTPSource.fetch: url=https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE limit=5
+2026-05-17 10:09:18,127 INFO httpx HTTP Request: GET https://glints.com/api/v1/opportunities?keyword=remote&country=ID&limit=5&offset=0&workArrangement=REMOTE "HTTP/1.1 403 Forbidden"
+2026-05-17 10:09:18,254 WARNING scraper.httpx_scraper Glints API returned 403, trying HTML fallback
+2026-05-17 10:09:18,467 INFO httpx HTTP Request: GET https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE "HTTP/1.1 403 Forbidden"
+2026-05-17 10:09:18,589 WARNING scraper.httpx_scraper Glints HTML fallback failed: Client error '403 Forbidden' for url 'https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403
+2026-05-17 10:09:18,590 WARNING scraper Primary source glints-http failed: Glints API returned 403 and HTML fallback also failed; falling back to jobicy
+2026-05-17 10:09:18,590 INFO scraper.httpx_scraper JobicySource.fetch: tag=developer limit=5
+2026-05-17 10:09:18,732 INFO httpx HTTP Request: GET https://jobicy.com/api/v2/remote-jobs?count=5&tag=developer "HTTP/1.1 200 OK"
+2026-05-17 10:09:18,735 INFO scraper.httpx_scraper JobicySource.fetch returning 5 listing(s)
+2026-05-17 10:09:18,735 INFO werkzeug 127.0.0.1 - - [17/May/2026 10:09:18] "GET /api/test-scrape?source=all HTTP/1.1" 200 -
+2026-05-17 10:09:18,947 INFO scraper.httpx_scraper IndeedHTTPSource.fetch: url=https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia limit=5
+2026-05-17 10:09:19,063 INFO httpx HTTP Request: GET https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia "HTTP/1.1 403 Forbidden"
+2026-05-17 10:09:19,065 WARNING scraper Primary source indeed-http failed: Client error '403 Forbidden' for url 'https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403; falling back to remotive
+2026-05-17 10:09:19,065 INFO scraper.httpx_scraper RemotiveSource.fetch: category=software-dev limit=5
+2026-05-17 10:09:19,205 INFO httpx HTTP Request: GET https://remotive.com/api/remote-jobs?category=software-dev&limit=5 "HTTP/1.1 200 OK"
+2026-05-17 10:09:19,215 INFO scraper.httpx_scraper RemotiveSource.fetch returning 5 listing(s)
+2026-05-17 10:09:19,215 INFO scraper.httpx_scraper GlintsHTTPSource.fetch: url=https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE limit=5
+2026-05-17 10:09:19,440 INFO httpx HTTP Request: GET https://glints.com/api/v1/opportunities?keyword=remote&country=ID&limit=5&offset=0&workArrangement=REMOTE "HTTP/1.1 403 Forbidden"
+2026-05-17 10:09:19,581 WARNING scraper.httpx_scraper Glints API returned 403, trying HTML fallback
+2026-05-17 10:09:19,791 INFO httpx HTTP Request: GET https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE "HTTP/1.1 403 Forbidden"
+2026-05-17 10:09:19,919 WARNING scraper.httpx_scraper Glints HTML fallback failed: Client error '403 Forbidden' for url 'https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403
+2026-05-17 10:09:19,919 WARNING scraper Primary source glints-http failed: Glints API returned 403 and HTML fallback also failed; falling back to jobicy
+2026-05-17 10:09:19,920 INFO scraper.httpx_scraper JobicySource.fetch: tag=developer limit=5
+2026-05-17 10:09:20,056 INFO httpx HTTP Request: GET https://jobicy.com/api/v2/remote-jobs?count=5&tag=developer "HTTP/1.1 200 OK"
+2026-05-17 10:09:20,058 INFO scraper.httpx_scraper JobicySource.fetch returning 5 listing(s)
+2026-05-17 10:09:20,059 INFO werkzeug 127.0.0.1 - - [17/May/2026 10:09:20] "GET /api/test-scrape?source=all HTTP/1.1" 200 -
+2026-05-17 10:09:27,004 INFO werkzeug 127.0.0.1 - - [17/May/2026 10:09:27] "GET /api/test-format HTTP/1.1" 200 -
+2026-05-17 10:09:36,051 INFO scraper.httpx_scraper GlintsHTTPSource.fetch: url=https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE limit=5
+2026-05-17 10:09:36,236 INFO httpx HTTP Request: GET https://glints.com/api/v1/opportunities?keyword=remote&country=ID&limit=5&offset=0&workArrangement=REMOTE "HTTP/1.1 403 Forbidden"
+2026-05-17 10:09:36,364 WARNING scraper.httpx_scraper Glints API returned 403, trying HTML fallback
+2026-05-17 10:09:36,541 INFO httpx HTTP Request: GET https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE "HTTP/1.1 403 Forbidden"
+2026-05-17 10:09:36,683 WARNING scraper.httpx_scraper Glints HTML fallback failed: Client error '403 Forbidden' for url 'https://glints.com/id/opportunities/jobs/explore?keyword=remote&country=ID&workArrangement=REMOTE'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403
+2026-05-17 10:09:36,683 WARNING scraper Primary source glints-http failed: Glints API returned 403 and HTML fallback also failed; falling back to jobicy
+2026-05-17 10:09:36,683 INFO scraper.httpx_scraper JobicySource.fetch: tag=developer limit=5
+2026-05-17 10:09:36,817 INFO httpx HTTP Request: GET https://jobicy.com/api/v2/remote-jobs?count=5&tag=developer "HTTP/1.1 200 OK"
+2026-05-17 10:09:36,819 INFO scraper.httpx_scraper JobicySource.fetch returning 5 listing(s)
+2026-05-17 10:09:36,820 INFO werkzeug 127.0.0.1 - - [17/May/2026 10:09:36] "GET /api/test-scrape?source=glints HTTP/1.1" 200 -
+2026-05-17 10:09:44,538 INFO scraper.httpx_scraper IndeedHTTPSource.fetch: url=https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia limit=5
+2026-05-17 10:09:44,675 INFO httpx HTTP Request: GET https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia "HTTP/1.1 403 Forbidden"
+2026-05-17 10:09:44,678 WARNING scraper Primary source indeed-http failed: Client error '403 Forbidden' for url 'https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403; falling back to remotive
+2026-05-17 10:09:44,678 INFO scraper.httpx_scraper RemotiveSource.fetch: category=software-dev limit=5
+2026-05-17 10:09:44,814 INFO httpx HTTP Request: GET https://remotive.com/api/remote-jobs?category=software-dev&limit=5 "HTTP/1.1 200 OK"
+2026-05-17 10:09:44,821 INFO scraper.httpx_scraper RemotiveSource.fetch returning 5 listing(s)
+2026-05-17 10:09:44,822 INFO werkzeug 127.0.0.1 - - [17/May/2026 10:09:44] "GET /api/test-scrape?source=indeed HTTP/1.1" 200 -
+2026-05-17 10:11:34,798 INFO werkzeug 127.0.0.1 - - [17/May/2026 10:11:34] "GET / HTTP/1.1" 200 -
+2026-05-17 10:12:28,197 INFO werkzeug [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.100.85:5000
+2026-05-17 10:12:28,198 INFO werkzeug [33mPress CTRL+C to quit[0m
+2026-05-17 10:12:33,935 INFO werkzeug 127.0.0.1 - - [17/May/2026 10:12:33] "GET / HTTP/1.1" 200 -
+2026-05-17 10:15:17,389 INFO werkzeug [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.100.85:5000
+2026-05-17 10:15:17,389 INFO werkzeug [33mPress CTRL+C to quit[0m
+2026-05-17 10:15:22,170 INFO werkzeug 127.0.0.1 - - [17/May/2026 10:15:22] "GET / HTTP/1.1" 200 -
+2026-05-17 10:15:45,360 INFO scraper.httpx_scraper IndeedHTTPSource.fetch: url=https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia limit=5
+2026-05-17 10:15:45,608 INFO httpx HTTP Request: GET https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia "HTTP/1.1 403 Forbidden"
+2026-05-17 10:15:45,611 WARNING scraper Primary source indeed-http failed: Client error '403 Forbidden' for url 'https://id.indeed.com/jobs?q=remote+work+from+home&l=Indonesia'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403; falling back to remotive
+2026-05-17 10:15:45,611 INFO scraper.httpx_scraper RemotiveSource.fetch: category=software-dev limit=5
+2026-05-17 10:15:45,756 INFO httpx HTTP Request: GET https://remotive.com/api/remote-jobs?category=software-dev&limit=5 "HTTP/1.1 200 OK"
+2026-05-17 10:15:45,763 INFO scraper.httpx_scraper RemotiveSource.fetch returning 5 listing(s)
+2026-05-17 10:15:45,764 INFO werkzeug 127.0.0.1 - - [17/May/2026 10:15:45] "GET /api/test-scrape?source=indeed HTTP/1.1" 200 -
+2026-05-17 10:15:49,911 INFO werkzeug 127.0.0.1 - - [17/May/2026 10:15:49] "GET / HTTP/1.1" 200 -

@@ -1,0 +1,6 @@
+.env
+posted_jobs.sqlite
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store

@@ -1,0 +1,8 @@
+.git
+.kiro
+__pycache__
+*.pyc
+.env
+posted_jobs.sqlite
+tests/
+.github/
