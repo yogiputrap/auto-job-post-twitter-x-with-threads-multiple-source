@@ -168,14 +168,193 @@ def format_long_post(listing: JobListing) -> str:
 # =============================================================================
 
 def format_summary_post(listing: JobListing, groq_api_key: str = "") -> str:
-    """Format as AI-summarized post using Groq API."""
-    if not groq_api_key:
-        # Fallback to template-based summary if no API key
-        return _format_summary_template(listing)
+    """Format as summarized post. Uses AI if key provided, otherwise smart template."""
+    # If Groq key available and not empty, try AI
+    if groq_api_key and groq_api_key.strip():
+        result = _format_with_ai(listing, groq_api_key)
+        if result:
+            return result
 
-    # Prepare job data for the AI
+    # Smart template-based summary (no AI needed)
+    return _format_smart_summary(listing)
+
+
+def _format_smart_summary(listing: JobListing) -> str:
+    """Smart template summary — parses description and formats nicely without AI."""
+    salary_text = f" ({listing.salary})" if listing.salary else ""
+    job_type = listing.job_type or "Full-Time"
     description = _strip_html(listing.description) if listing.description else ""
-    # Truncate description to avoid token limits
+
+    lines = [
+        f"📢 JOB VACANCY: {listing.title}{salary_text}",
+        "",
+    ]
+
+    # Generate intro sentence
+    intro = f"{listing.company} membuka lowongan untuk posisi {listing.title}"
+    if "remote" in listing.location.lower():
+        intro += " secara fully remote."
+    else:
+        intro += f" di {listing.location}."
+    lines.append(intro)
+
+    lines.extend([
+        "",
+        "━━━━━━━━━━━━━━━━━━━━",
+        "",
+        "📌 RINGKASAN UTAMA:",
+        f"Lokasi: {listing.location}",
+        f"Gaji: {listing.salary or 'Tidak disebutkan'}",
+        f"Tipe: {job_type}",
+    ])
+
+    if description:
+        # Extract requirements/qualifications
+        requirements = _extract_requirements(description)
+        if requirements:
+            lines.extend(["", "💡 KUALIFIKASI YANG DICARI:"])
+            for req in requirements[:6]:
+                lines.append(f"• {req}")
+
+        # Extract responsibilities
+        responsibilities = _extract_responsibilities(description)
+        if responsibilities:
+            lines.extend(["", "📋 TANGGUNG JAWAB:"])
+            for resp in responsibilities[:5]:
+                lines.append(f"• {resp}")
+
+        # Extract tech stack / tools if mentioned
+        tech = _extract_tech_stack(description)
+        if tech:
+            lines.extend(["", f"🛠 Tech Stack: {', '.join(tech[:8])}"])
+
+    lines.extend([
+        "",
+        "Apply Now 👇",
+        f"🔗 {listing.url}",
+        "",
+        HASHTAGS_LONG,
+    ])
+
+    post = "\n".join(lines)
+    if len(post) > POST_LIMIT:
+        post = post[:POST_LIMIT - 10] + "\n..."
+    return post
+
+
+def _extract_requirements(text: str) -> list[str]:
+    """Extract requirement/qualification bullet points from description."""
+    results = []
+    lines = text.split('\n')
+
+    # Find section headers that indicate requirements
+    req_keywords = ['requirement', 'qualif', 'must have', 'what you need',
+                    'what we look', 'ideal candidate', 'you have', 'you bring',
+                    'skills', 'experience required', 'who you are']
+
+    in_req_section = False
+    for line in lines:
+        line_stripped = line.strip()
+        lower = line_stripped.lower()
+
+        # Detect section start
+        if any(kw in lower for kw in req_keywords) and len(line_stripped) < 80:
+            in_req_section = True
+            continue
+
+        # Detect section end (new header)
+        if in_req_section and line_stripped and not line_stripped.startswith(('•', '-', '–', '*', '▪')) and not re.match(r'^\d+[\.\)]', line_stripped):
+            if len(line_stripped) < 60 and line_stripped.endswith(':'):
+                in_req_section = False
+                continue
+
+        # Collect bullets in requirement section
+        if in_req_section and line_stripped:
+            clean = re.sub(r'^[•\-–*▪\d+\.\)]\s*', '', line_stripped).strip()
+            if 10 < len(clean) < 250:
+                results.append(clean)
+
+    # Fallback: look for any bullets with requirement-like keywords
+    if not results:
+        req_line_keywords = ['experience', 'years', 'degree', 'proficient', 'knowledge',
+                            'familiar', 'ability', 'strong', 'excellent', 'required']
+        for line in lines:
+            line_stripped = line.strip()
+            if line_stripped.startswith(('•', '-', '–', '*')):
+                clean = re.sub(r'^[•\-–*]\s*', '', line_stripped).strip()
+                if any(kw in clean.lower() for kw in req_line_keywords) and 10 < len(clean) < 250:
+                    results.append(clean)
+
+    return results[:6]
+
+
+def _extract_responsibilities(text: str) -> list[str]:
+    """Extract responsibility bullet points from description."""
+    results = []
+    lines = text.split('\n')
+
+    resp_keywords = ['responsibilit', 'what you will', 'what you\'ll', 'your role',
+                     'you will', 'day to day', 'key duties', 'job description',
+                     'about the role', 'the role']
+
+    in_resp_section = False
+    for line in lines:
+        line_stripped = line.strip()
+        lower = line_stripped.lower()
+
+        if any(kw in lower for kw in resp_keywords) and len(line_stripped) < 80:
+            in_resp_section = True
+            continue
+
+        if in_resp_section and line_stripped and not line_stripped.startswith(('•', '-', '–', '*', '▪')) and not re.match(r'^\d+[\.\)]', line_stripped):
+            if len(line_stripped) < 60 and (line_stripped.endswith(':') or line_stripped.isupper()):
+                in_resp_section = False
+                continue
+
+        if in_resp_section and line_stripped:
+            clean = re.sub(r'^[•\-–*▪\d+\.\)]\s*', '', line_stripped).strip()
+            if 10 < len(clean) < 250:
+                results.append(clean)
+
+    return results[:5]
+
+
+def _extract_tech_stack(text: str) -> list[str]:
+    """Extract technology/tool mentions from description."""
+    tech_patterns = [
+        'Python', 'JavaScript', 'TypeScript', 'Java', 'Go', 'Golang', 'Rust',
+        'C\\+\\+', 'C#', 'Ruby', 'PHP', 'Swift', 'Kotlin', 'Scala',
+        'React', 'Vue', 'Angular', 'Next\\.js', 'Node\\.js', 'Django', 'Flask',
+        'Spring', 'Laravel', 'Rails', 'FastAPI', 'Express',
+        'AWS', 'GCP', 'Azure', 'Docker', 'Kubernetes', 'K8s', 'Terraform',
+        'PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'Elasticsearch',
+        'GraphQL', 'REST', 'gRPC', 'Kafka', 'RabbitMQ',
+        'Git', 'CI/CD', 'Jenkins', 'GitHub Actions',
+        'Linux', 'Nginx', 'Apache',
+        'TensorFlow', 'PyTorch', 'Pandas', 'NumPy',
+        'Figma', 'Sketch', 'Adobe', 'Photoshop', 'Illustrator',
+        'Salesforce', 'HubSpot', 'Jira', 'Confluence',
+        'SQL', 'NoSQL', 'Spark', 'Hadoop', 'Airflow',
+    ]
+
+    found = []
+    for tech in tech_patterns:
+        if re.search(r'\b' + tech + r'\b', text, re.IGNORECASE):
+            # Use the original casing from the pattern
+            clean_name = tech.replace('\\', '').replace('.', '.').replace('+', '+')
+            if clean_name not in found:
+                found.append(clean_name)
+
+    return found[:8]
+
+
+# =============================================================================
+# AI Enhancement (optional, uses Groq if key available)
+# =============================================================================
+
+def _format_with_ai(listing: JobListing, groq_api_key: str) -> Optional[str]:
+    """Try to format with Groq AI. Returns None on failure."""
+    description = _strip_html(listing.description) if listing.description else ""
     if len(description) > 3000:
         description = description[:3000] + "..."
 
@@ -204,90 +383,16 @@ Description: {description or 'Tidak ada deskripsi detail'}"""
             },
             timeout=30,
         )
-
         if response.status_code == 200:
             data = response.json()
             summary = data["choices"][0]["message"]["content"].strip()
-
-            # Append link and hashtags
             post = f"{summary}\n\nApply Now 👇\n🔗 {listing.url}\n\n{HASHTAGS_LONG}"
             if len(post) > POST_LIMIT:
                 post = post[:POST_LIMIT - 10] + "\n..."
             return post
-        else:
-            logger.warning("Groq API returned %d, falling back to template", response.status_code)
-            return _format_summary_template(listing)
-
     except Exception as exc:
-        logger.warning("Groq API error: %s, falling back to template", exc)
-        return _format_summary_template(listing)
-
-
-def _format_summary_template(listing: JobListing) -> str:
-    """Template-based summary (no AI needed)."""
-    salary_text = f" ({listing.salary})" if listing.salary else ""
-    job_type = listing.job_type or "Full-Time"
-
-    lines = [
-        f"📢 JOB VACANCY: {listing.title}{salary_text}",
-        "",
-        f"{listing.company} membuka lowongan untuk posisi {listing.title}.",
-        "",
-        "━━━━━━━━━━━━━━━━━━━━",
-        "",
-        "📌 RINGKASAN UTAMA:",
-        f"Lokasi: {listing.location}",
-        f"Gaji: {listing.salary or 'Tidak disebutkan'}",
-        f"Tipe: {job_type}",
-    ]
-
-    # Extract key points from description if available
-    if listing.description:
-        description = _strip_html(listing.description)
-        if description:
-            # Try to extract bullet points or key requirements
-            bullets = _extract_key_points(description)
-            if bullets:
-                lines.extend(["", "💡 KUALIFIKASI YANG DICARI:"])
-                for bullet in bullets[:5]:
-                    lines.append(f"• {bullet}")
-
-    lines.extend(["", f"Apply Now 👇", f"🔗 {listing.url}", "", HASHTAGS_LONG])
-    return "\n".join(lines)
-
-
-def _extract_key_points(text: str) -> list[str]:
-    """Extract key bullet points from description text."""
-    points = []
-
-    # Look for lines that start with bullet-like patterns
-    for line in text.split('\n'):
-        line = line.strip()
-        if not line:
-            continue
-        # Match bullet points
-        if line.startswith(('•', '-', '–', '*', '▪')):
-            clean = line.lstrip('•-–*▪ ').strip()
-            if 10 < len(clean) < 200:
-                points.append(clean)
-        # Match numbered items
-        elif re.match(r'^\d+[\.\)]\s', line):
-            clean = re.sub(r'^\d+[\.\)]\s*', '', line).strip()
-            if 10 < len(clean) < 200:
-                points.append(clean)
-
-    # If no bullets found, try to extract from sentences with keywords
-    if not points:
-        keywords = ['experience', 'required', 'must', 'skill', 'knowledge',
-                    'proficient', 'ability', 'degree', 'years', 'familiar']
-        for line in text.split('\n'):
-            line = line.strip()
-            if any(kw in line.lower() for kw in keywords) and 15 < len(line) < 200:
-                points.append(line)
-                if len(points) >= 5:
-                    break
-
-    return points[:5]
+        logger.warning("Groq AI failed: %s", exc)
+    return None
 
 
 # =============================================================================
