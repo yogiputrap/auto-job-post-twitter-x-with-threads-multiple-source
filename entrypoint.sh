@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+
 # Export all env vars to a file so cron can access them
 printenv | grep -v "no_proxy" >> /etc/environment
 
@@ -7,11 +9,11 @@ echo "0 * * * * . /etc/environment; cd /app && /usr/local/bin/python main.py >> 
 chmod 0644 /etc/cron.d/bot-cron
 crontab /etc/cron.d/bot-cron
 
-# Run once immediately on startup
+# Start cron in background
+cron
+
+# Run bot once on startup (background, non-blocking)
 cd /app && python main.py >> /var/log/bot.log 2>&1 &
 
-# Start dashboard in background
-cd /app && python dashboard.py >> /var/log/dashboard.log 2>&1 &
-
-# Start cron and tail logs
-cron && tail -f /var/log/bot.log /var/log/dashboard.log
+# Start dashboard as FOREGROUND process (so container stays alive and port 5000 is served)
+cd /app && exec python dashboard.py
