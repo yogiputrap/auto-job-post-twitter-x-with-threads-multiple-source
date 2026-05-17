@@ -128,6 +128,40 @@ class Poster:
             logger.error("Error fetching Zernio accounts: %s", exc)
             return None
 
+    def _extract_post_id(self, data: dict) -> str:
+        """Extract post ID from Zernio response, trying various field names."""
+        for key in ("id", "_id", "postId", "post_id"):
+            if key in data and data[key]:
+                return str(data[key])
+        # Check nested
+        if "post" in data and isinstance(data["post"], dict):
+            nested = data["post"]
+            for key in ("id", "_id", "postId"):
+                if key in nested and nested[key]:
+                    return str(nested[key])
+        return "zernio-post"
+
+    def _post_with_retry(self, client: httpx.Client, payload: dict) -> httpx.Response:
+        """POST with automatic retry on 429."""
+        for attempt in range(self.MAX_RETRIES):
+            resp = client.post(
+                f"{ZERNIO_BASE_URL}/posts",
+                headers=self._headers,
+                json=payload,
+            )
+            if resp.status_code == 429:
+                # Parse retry delay from response
+                try:
+                    err_data = resp.json()
+                    wait = err_data.get("details", {}).get("retryAfterSeconds", 5)
+                except Exception:
+                    wait = 5
+                logger.warning("Rate limited (429). Waiting %ds before retry %d/%d", wait, attempt + 1, self.MAX_RETRIES)
+                self._sleep_func(wait)
+                continue
+            return resp
+        return resp  # Return last response if all retries exhausted
+
     def post(self, body: str) -> PostResult:
         """Post a single tweet via Zernio."""
         account_id = self._get_account_id()
@@ -142,16 +176,12 @@ class Poster:
 
         try:
             with httpx.Client(timeout=30) as client:
-                resp = client.post(
-                    f"{ZERNIO_BASE_URL}/posts",
-                    headers=self._headers,
-                    json=payload,
-                )
+                resp = self._post_with_retry(client, payload)
 
                 if resp.status_code in (200, 201):
                     data = resp.json()
-                    tweet_id = data.get("id") or data.get("postId") or "unknown"
-                    return PostResult(success=True, tweet_id=str(tweet_id))
+                    tweet_id = self._extract_post_id(data)
+                    return PostResult(success=True, tweet_id=tweet_id)
                 else:
                     return PostResult(
                         success=False,
@@ -187,15 +217,12 @@ class Poster:
 
         try:
             with httpx.Client(timeout=60) as client:
-                resp = client.post(
-                    f"{ZERNIO_BASE_URL}/posts",
-                    headers=self._headers,
-                    json=payload,
-                )
+                resp = self._post_with_retry(client, payload)
 
                 if resp.status_code in (200, 201):
                     data = resp.json()
-                    post_id = str(data.get("id") or data.get("postId") or "unknown")
+                    logger.info("Zernio post response keys: %s", list(data.keys()) if isinstance(data, dict) else type(data))
+                    post_id = self._extract_post_id(data)
                     tweet_ids = [post_id] + [f"{post_id}-{i}" for i in range(1, len(tweets))]
                     logger.info("Thread posted via Zernio: %d tweets, post_id=%s", len(tweets), post_id)
                     return ThreadResult(success=True, tweet_ids=tweet_ids)
