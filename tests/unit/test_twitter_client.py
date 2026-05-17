@@ -28,7 +28,7 @@ class TestThreadResult:
         poster = Poster(api_key="test-key")
         result = poster.post_thread([])
         assert result.success is False
-        assert "Empty thread" in result.error_message
+        assert "Empty" in result.error_message
 
 
 class TestPosterInit:

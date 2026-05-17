@@ -21,13 +21,7 @@ _HEX_ALPHABET = frozenset("0123456789abcdef")
 
 @dataclass(frozen=True)
 class JobListing:
-    """Immutable representation of a single job posting.
-
-    Fields mirror the "Data Models -> Job_Listing" table in the design.
-    Validation in `__post_init__` enforces the constraints from that
-    table so that downstream consumers (Formatter, Job_Manager) can
-    rely on well-formed inputs.
-    """
+    """Immutable representation of a single job posting."""
 
     job_id: str
     title: str
@@ -36,6 +30,8 @@ class JobListing:
     salary: Optional[str]
     url: str
     source: str
+    description: Optional[str] = None
+    job_type: Optional[str] = None
 
     def __post_init__(self) -> None:
         # job_id: exactly 16 lowercase hex chars

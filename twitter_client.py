@@ -192,9 +192,10 @@ class Poster:
             return PostResult(success=False, error_code=500, error_message=str(exc))
 
     def post_thread(self, tweets: List[str]) -> ThreadResult:
-        """Post a thread via Zernio using platformSpecificData.threadItems."""
+        """Post content via Zernio. Since X Premium supports 25k chars,
+        we post as a single long post (first item in the list)."""
         if not tweets:
-            return ThreadResult(success=False, error_message="Empty thread")
+            return ThreadResult(success=False, error_message="Empty content")
 
         account_id = self._get_account_id()
         if not account_id:
@@ -203,16 +204,13 @@ class Poster:
                 error_message="No Twitter account found in Zernio",
             )
 
-        # Build thread items for Zernio
-        thread_items = [{"content": tweet} for tweet in tweets]
+        # Combine all tweets into one post (for X Premium 25k char limit)
+        content = tweets[0] if len(tweets) == 1 else "\n\n".join(tweets)
 
         payload = {
-            "content": tweets[0],
+            "content": content,
             "platforms": [{"platform": "twitter", "accountId": account_id}],
             "publishNow": True,
-            "platformSpecificData": {
-                "threadItems": thread_items,
-            },
         }
 
         try:
@@ -223,16 +221,15 @@ class Poster:
                     data = resp.json()
                     logger.info("Zernio post response keys: %s", list(data.keys()) if isinstance(data, dict) else type(data))
                     post_id = self._extract_post_id(data)
-                    tweet_ids = [post_id] + [f"{post_id}-{i}" for i in range(1, len(tweets))]
-                    logger.info("Thread posted via Zernio: %d tweets, post_id=%s", len(tweets), post_id)
-                    return ThreadResult(success=True, tweet_ids=tweet_ids)
+                    logger.info("Posted via Zernio: post_id=%s, content_length=%d", post_id, len(content))
+                    return ThreadResult(success=True, tweet_ids=[post_id])
                 else:
-                    logger.error("Zernio thread post failed: %d %s", resp.status_code, resp.text[:200])
+                    logger.error("Zernio post failed: %d %s", resp.status_code, resp.text[:200])
                     return ThreadResult(
                         success=False, failed_at=0,
                         error_code=resp.status_code,
                         error_message=resp.text[:200],
                     )
         except Exception as exc:
-            logger.error("Exception posting thread via Zernio: %s", exc)
+            logger.error("Exception posting via Zernio: %s", exc)
             return ThreadResult(success=False, failed_at=0, error_code=500, error_message=str(exc))

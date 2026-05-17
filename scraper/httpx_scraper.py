@@ -324,11 +324,7 @@ class GlintsHTTPSource(FallbackJobSource):
 
 
 class RemotiveSource(FallbackJobSource):
-    """Remotive.com API source — free, no auth, always works.
-    
-    Uses https://remotive.com/api/remote-jobs to fetch remote job listings.
-    This is the most reliable source for testing since it doesn't block
-    HTTP requests and requires no authentication.
+    """Remotive.com API — free, no auth, reliable.
     
     Categories: software-dev, design, marketing, customer-support, etc.
     """
@@ -338,56 +334,42 @@ class RemotiveSource(FallbackJobSource):
     def __init__(self, category: str = "software-dev", inter_request_delay_seconds: int = 2) -> None:
         super().__init__(inter_request_delay_seconds=inter_request_delay_seconds)
         self.category = category
-        self.api_url = "https://remotive.com/api/remote-jobs"
 
     def fetch(self, limit: int) -> List[JobListing]:
         logger.info("RemotiveSource.fetch: category=%s limit=%d", self.category, limit)
         self._throttle()
 
-        params = {"category": self.category, "limit": str(limit)}
-        headers = {"User-Agent": _USER_AGENT, "Accept": "application/json"}
-
         response = httpx.get(
-            self.api_url,
-            params=params,
+            "https://remotive.com/api/remote-jobs",
+            params={"category": self.category, "limit": str(limit)},
             timeout=15.0,
-            follow_redirects=True,
-            headers=headers,
+            headers={"User-Agent": _USER_AGENT},
         )
         response.raise_for_status()
-        data = response.json()
 
         listings: List[JobListing] = []
-        jobs = data.get("jobs", [])
-
-        for item in jobs[:limit]:
+        for item in response.json().get("jobs", [])[:limit]:
             try:
                 title = (item.get("title") or "").strip()
                 company = (item.get("company_name") or "").strip()
                 location = (item.get("candidate_required_location") or "Remote").strip()
                 salary = (item.get("salary") or "").strip() or None
                 url = (item.get("url") or "").strip()
-                job_id_raw = str(item.get("id", ""))
+                description = (item.get("description") or "").strip()
+                job_type = (item.get("job_type") or "").strip() or None
 
                 if not title or not company or not url:
                     continue
-
-                # Use "indeed" as source to pass JobListing validation
-                # (only "indeed" and "glints" are allowed)
-                job_id = JobListing.compute_id("indeed", job_id_raw or url)
+                job_id = JobListing.compute_id("indeed", str(item.get("id", url)))
                 listings.append(JobListing(
-                    job_id=job_id,
-                    title=title,
-                    company=company,
-                    location=location or "Remote",
-                    salary=salary,
-                    url=url,
-                    source="indeed",  # mapped to indeed for validation
+                    job_id=job_id, title=title, company=company,
+                    location=location or "Remote", salary=salary,
+                    url=url, source="indeed",
+                    description=description or None,
+                    job_type=job_type,
                 ))
             except Exception as e:
                 logger.warning("Failed to parse remotive job: %s", e)
-                continue
-
         logger.info("RemotiveSource.fetch returning %d listing(s)", len(listings))
         return listings
 
@@ -424,6 +406,9 @@ class RemotiveSource(FallbackJobSource):
                 location = (item.get("candidate_required_location") or "Remote").strip()
                 salary = (item.get("salary") or "").strip() or None
                 url = (item.get("url") or "").strip()
+                description = (item.get("description") or "").strip()
+                job_type = (item.get("job_type") or "").strip() or None
+
                 if not title or not company or not url:
                     continue
                 job_id = JobListing.compute_id("indeed", str(item.get("id", url)))
@@ -431,6 +416,8 @@ class RemotiveSource(FallbackJobSource):
                     job_id=job_id, title=title, company=company,
                     location=location or "Remote", salary=salary,
                     url=url, source="indeed",
+                    description=description or None,
+                    job_type=job_type,
                 ))
             except Exception as e:
                 logger.warning("Failed to parse remotive job: %s", e)
@@ -469,12 +456,17 @@ class JobicySource(FallbackJobSource):
                 company = (item.get("companyName") or "").strip()
                 location = (item.get("jobGeo") or "Remote").strip()
                 url = (item.get("url") or "").strip()
+                description = (item.get("jobDescription") or "").strip()
+                job_type = (item.get("jobType") or item.get("jobIndustry", "")).strip() or None
                 
                 salary_min = item.get("annualSalaryMin")
                 salary_max = item.get("annualSalaryMax")
+                salary_currency = item.get("salaryCurrency", "USD")
                 salary = None
                 if salary_min and salary_max:
-                    salary = f"${int(salary_min):,} - ${int(salary_max):,}/yr"
+                    salary = f"{salary_currency} {int(salary_min):,} - {int(salary_max):,}/yr"
+                elif salary_min:
+                    salary = f"{salary_currency} {int(salary_min):,}+/yr"
                 
                 if not title or not company or not url:
                     continue
@@ -484,6 +476,8 @@ class JobicySource(FallbackJobSource):
                     job_id=job_id, title=title, company=company,
                     location=location or "Remote", salary=salary,
                     url=url, source="glints",
+                    description=description or None,
+                    job_type=job_type,
                 ))
             except Exception as e:
                 logger.warning("Failed to parse jobicy job: %s", e)
