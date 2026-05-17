@@ -24,6 +24,7 @@ from job_store import JobStore
 from scraper.base import FallbackJobSource, JobSource
 from scraper.glints import GlintsRSSSource, GlintsSource
 from scraper.indeed import IndeedRSSSource, IndeedSource
+from scraper.httpx_scraper import RemotiveSource, JobicySource
 from twitter_client import Poster
 
 logger = logging.getLogger(__name__)
@@ -42,21 +43,23 @@ def _build_sources(config: AppConfig) -> list[tuple[JobSource, FallbackJobSource
     """Construct the (primary, fallback) source pairs from config."""
     delay = config.inter_request_delay_seconds
 
+    # Indeed: Playwright primary, Remotive API as reliable fallback
     indeed_primary = IndeedSource(
         search_url=config.indeed_search_url,
         inter_request_delay_seconds=delay,
     )
-    indeed_fallback = IndeedRSSSource(
-        rss_url=config.indeed_search_url,
+    indeed_fallback = RemotiveSource(
+        category="software-dev",
         inter_request_delay_seconds=delay,
     )
 
+    # Glints: Playwright primary, Jobicy API as reliable fallback
     glints_primary = GlintsSource(
         search_url=config.glints_search_url,
         inter_request_delay_seconds=delay,
     )
-    glints_fallback = GlintsRSSSource(
-        feed_url=config.glints_search_url,
+    glints_fallback = JobicySource(
+        tag="developer",
         inter_request_delay_seconds=delay,
     )
 
