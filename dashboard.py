@@ -454,7 +454,9 @@ DASHBOARD_HTML = """
                 el.innerHTML = '✅ Connected (' + data.model + ') — ' + data.elapsed + 's';
                 el.style.color = '#10b981';
             } else {
-                el.innerHTML = '❌ ' + data.error;
+                let msg = '❌ ' + data.error;
+                if (data.debug) msg += '<br><small style="color:#94a3b8;">' + data.debug + '</small>';
+                el.innerHTML = msg;
                 el.style.color = '#ef4444';
             }
         } catch(e) {
@@ -571,9 +573,14 @@ def api_test_groq():
     """Test Groq API connection."""
     import time as _time
     start = _time.time()
-    api_key = os.environ.get("GROQ_API_KEY", "")
+    api_key = os.environ.get("GROQ_API_KEY", "").strip()
     if not api_key:
-        return jsonify({"success": False, "error": "GROQ_API_KEY not set in environment", "elapsed": 0})
+        return jsonify({"success": False, "error": "GROQ_API_KEY not set in environment", "elapsed": 0,
+                        "debug": f"Env keys containing 'GROQ': {[k for k in os.environ if 'GROQ' in k.upper()]}"})
+
+    # Show masked key for debugging
+    masked = api_key[:4] + "..." + api_key[-4:] if len(api_key) > 8 else "***"
+    key_len = len(api_key)
 
     try:
         resp = httpx.post(
@@ -597,7 +604,8 @@ def api_test_groq():
             model = data.get("model", "unknown")
             return jsonify({"success": True, "reply": reply, "model": model, "elapsed": elapsed})
         else:
-            return jsonify({"success": False, "error": f"HTTP {resp.status_code}: {resp.text[:200]}", "elapsed": elapsed})
+            return jsonify({"success": False, "error": f"HTTP {resp.status_code}: {resp.text[:200]}",
+                            "elapsed": elapsed, "debug": f"Key: {masked} (len={key_len})"})
     except Exception as e:
         elapsed = round(_time.time() - start, 2)
         return jsonify({"success": False, "error": str(e), "elapsed": elapsed})
