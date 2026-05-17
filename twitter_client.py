@@ -1,19 +1,13 @@
-"""Twitter/X API v2 client for posting tweets and threads.
-
-Uses direct HTTP calls to X API v2 (no tweepy dependency for posting).
-Supports OAuth 2.0 User Context (access_token from PKCE flow).
-"""
+"""Twitter/X API v2 client using OAuth 1.0a (User Context) for posting tweets and threads."""
 
 from dataclasses import dataclass, field
 from typing import List, Optional
 import time
 import logging
 
-import httpx
+import tweepy
 
 logger = logging.getLogger(__name__)
-
-X_API_BASE = "https://api.twitter.com/2"
 
 
 @dataclass
@@ -34,68 +28,57 @@ class ThreadResult:
 
 
 class Poster:
-    """Posts tweets via X API v2 using OAuth 2.0 User Access Token."""
+    """Posts tweets via X API v2 using OAuth 1.0a User Context (tweepy.Client)."""
 
     _sleep_func = staticmethod(time.sleep)
-    _time_func = staticmethod(time.time)
-
     MAX_RETRIES_5XX = 3
     BACKOFF_BASE_SECONDS = 2
-    DEFAULT_RATE_LIMIT_WAIT = 15 * 60
-    MAX_RATE_LIMIT_WAIT = 15 * 60
 
-    def __init__(self, oauth_token: str, client_id: str, client_secret: str) -> None:
-        self._oauth_token = oauth_token
-        self._client_id = client_id
-        self._client_secret = client_secret
-
-        if not oauth_token or not oauth_token.strip():
-            self._headers = None
+    def __init__(self, consumer_key: str, consumer_secret: str,
+                 access_token: str, access_token_secret: str) -> None:
+        if not all([consumer_key, consumer_secret, access_token, access_token_secret]):
+            self._client = None
             return
 
-        self._headers = {
-            "Authorization": f"Bearer {oauth_token}",
-            "Content-Type": "application/json",
-        }
+        self._client = tweepy.Client(
+            consumer_key=consumer_key,
+            consumer_secret=consumer_secret,
+            access_token=access_token,
+            access_token_secret=access_token_secret,
+            wait_on_rate_limit=False,
+        )
 
     def post(self, body: str, reply_to: Optional[str] = None) -> PostResult:
-        if self._headers is None:
+        if self._client is None:
             return PostResult(success=False, error_code=401, error_message="Authentication failed")
 
-        payload = {"text": body}
-        if reply_to:
-            payload["reply"] = {"in_reply_to_tweet_id": reply_to}
-
         try:
-            response = httpx.post(
-                f"{X_API_BASE}/tweets",
-                json=payload,
-                headers=self._headers,
-                timeout=30.0,
-            )
-
-            if response.status_code == 201:
-                data = response.json()
-                tweet_id = data.get("data", {}).get("id")
-                return PostResult(success=True, tweet_id=tweet_id)
-            elif response.status_code == 429:
-                return self._handle_429(response, body, reply_to)
-            elif response.status_code >= 500:
-                return self._handle_5xx(response, body, reply_to)
-            else:
-                error_data = response.json() if response.text else {}
-                error_msg = str(error_data.get("detail", error_data.get("errors", response.text)))
-                return PostResult(success=False, error_code=response.status_code, error_message=error_msg)
-
-        except httpx.TimeoutException as e:
-            return PostResult(success=False, error_code=408, error_message=f"Timeout: {e}")
-        except Exception as e:
-            return PostResult(success=False, error_code=500, error_message=str(e))
+            kwargs = {"text": body}
+            if reply_to:
+                kwargs["in_reply_to_tweet_id"] = reply_to
+            response = self._client.create_tweet(**kwargs)
+            tweet_id = str(response.data["id"])
+            return PostResult(success=True, tweet_id=tweet_id)
+        except tweepy.TooManyRequests as exc:
+            return self._handle_429(exc, body, reply_to)
+        except tweepy.TwitterServerError as exc:
+            return self._handle_5xx(exc, body, reply_to)
+        except tweepy.Unauthorized:
+            return PostResult(success=False, error_code=401, error_message="Authentication failed")
+        except tweepy.Forbidden as exc:
+            return PostResult(success=False, error_code=403, error_message=str(exc))
+        except tweepy.BadRequest as exc:
+            return PostResult(success=False, error_code=400, error_message=str(exc))
+        except tweepy.HTTPException as exc:
+            code = exc.response.status_code if hasattr(exc, "response") and exc.response else 500
+            return PostResult(success=False, error_code=code, error_message=str(exc))
+        except Exception as exc:
+            return PostResult(success=False, error_code=500, error_message=str(exc))
 
     def post_thread(self, tweets: List[str]) -> ThreadResult:
         if not tweets:
             return ThreadResult(success=False, error_message="Empty thread")
-        if self._headers is None:
+        if self._client is None:
             return ThreadResult(success=False, failed_at=0, error_code=401, error_message="Authentication failed")
 
         tweet_ids: List[str] = []
@@ -115,32 +98,25 @@ class Poster:
         logger.info("Thread posted: %d tweets, IDs=%s", len(tweet_ids), tweet_ids)
         return ThreadResult(success=True, tweet_ids=tweet_ids)
 
-    def _handle_429(self, response, body: str, reply_to: Optional[str]) -> PostResult:
-        wait = self.DEFAULT_RATE_LIMIT_WAIT
-        reset_header = response.headers.get("x-rate-limit-reset")
-        if reset_header:
-            try:
-                wait = min(max(0, int(reset_header) - int(self._time_func())), self.MAX_RATE_LIMIT_WAIT)
-            except (ValueError, TypeError):
-                pass
-        logger.warning("Rate limited (429). Waiting %ds.", wait)
+    def _handle_429(self, exc, body: str, reply_to: Optional[str]) -> PostResult:
+        wait = 60
+        if hasattr(exc, "response") and exc.response:
+            reset = exc.response.headers.get("x-rate-limit-reset")
+            if reset:
+                try:
+                    wait = min(max(0, int(reset) - int(time.time())), 900)
+                except (ValueError, TypeError):
+                    pass
+        logger.warning("Rate limited. Waiting %ds.", wait)
         self._sleep_func(wait)
+        return self.post(body, reply_to)
 
-        retry = httpx.post(f"{X_API_BASE}/tweets", json={"text": body, **({"reply": {"in_reply_to_tweet_id": reply_to}} if reply_to else {})},
-                           headers=self._headers, timeout=30.0)
-        if retry.status_code == 201:
-            return PostResult(success=True, tweet_id=retry.json().get("data", {}).get("id"))
-        return PostResult(success=False, error_code=retry.status_code, error_message=retry.text[:200])
-
-    def _handle_5xx(self, response, body: str, reply_to: Optional[str]) -> PostResult:
+    def _handle_5xx(self, exc, body: str, reply_to: Optional[str]) -> PostResult:
         for attempt in range(self.MAX_RETRIES_5XX):
             wait = self.BACKOFF_BASE_SECONDS * (2 ** attempt)
-            logger.warning("5xx error. Retry %d/%d after %ds.", attempt + 1, self.MAX_RETRIES_5XX, wait)
+            logger.warning("5xx. Retry %d/%d after %ds.", attempt + 1, self.MAX_RETRIES_5XX, wait)
             self._sleep_func(wait)
-            retry = httpx.post(f"{X_API_BASE}/tweets", json={"text": body, **({"reply": {"in_reply_to_tweet_id": reply_to}} if reply_to else {})},
-                               headers=self._headers, timeout=30.0)
-            if retry.status_code == 201:
-                return PostResult(success=True, tweet_id=retry.json().get("data", {}).get("id"))
-            if retry.status_code < 500:
-                return PostResult(success=False, error_code=retry.status_code, error_message=retry.text[:200])
-        return PostResult(success=False, error_code=response.status_code, error_message="All retries exhausted")
+            result = self.post(body, reply_to)
+            if result.success or (result.error_code and result.error_code < 500):
+                return result
+        return PostResult(success=False, error_code=500, error_message="All retries exhausted")

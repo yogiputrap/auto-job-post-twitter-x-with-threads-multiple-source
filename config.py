@@ -9,22 +9,19 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class AppConfig(BaseSettings):
-    """Application configuration sourced from environment variables.
+    """Application configuration sourced from environment variables."""
 
-    Required variables (no default) cause a validation error at instantiation
-    time when missing, satisfying Requirements 6.1 and 6.2.
-    """
+    # OAuth 1.0a credentials for posting tweets
+    consumer_key: SecretStr
+    consumer_secret: SecretStr
+    access_token: SecretStr
+    access_token_secret: SecretStr
 
-    # Credentials (Requirement 6.3 - never log in plain text)
-    oauth_token: SecretStr
-    x_client_id: SecretStr
-    x_client_secret: SecretStr
-
-    # Required search URLs (Requirement 6.1)
+    # Required search URLs
     indeed_search_url: str
     glints_search_url: str
 
-    # Optional tuning parameters with sensible defaults (per design.md)
+    # Optional tuning parameters
     run_interval_minutes: int = 60
     db_path: str = "posted_jobs.sqlite"
     listings_per_source: int = 10

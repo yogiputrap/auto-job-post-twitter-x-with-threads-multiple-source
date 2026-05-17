@@ -72,9 +72,10 @@ def run_once(config: AppConfig) -> int:
     try:
         sources = _build_sources(config)
         poster = Poster(
-            oauth_token=config.oauth_token.get_secret_value(),
-            client_id=config.x_client_id.get_secret_value(),
-            client_secret=config.x_client_secret.get_secret_value(),
+            consumer_key=config.consumer_key.get_secret_value(),
+            consumer_secret=config.consumer_secret.get_secret_value(),
+            access_token=config.access_token.get_secret_value(),
+            access_token_secret=config.access_token_secret.get_secret_value(),
         )
         manager = JobManager(
             config=config,

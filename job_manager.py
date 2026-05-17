@@ -127,9 +127,10 @@ class JobManager:
 
         # Install credential redaction filter (Requirement 6.3, Property 20)
         secrets = [
-            config.oauth_token.get_secret_value(),
-            config.x_client_id.get_secret_value(),
-            config.x_client_secret.get_secret_value(),
+            config.consumer_key.get_secret_value(),
+            config.consumer_secret.get_secret_value(),
+            config.access_token.get_secret_value(),
+            config.access_token_secret.get_secret_value(),
         ]
         self._redaction_filter = CredentialRedactionFilter(secrets)
         self._logger.addFilter(self._redaction_filter)
