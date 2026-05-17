@@ -4,8 +4,6 @@
 Usage:
     python main.py              # Run a single cycle and exit
     python main.py --scheduled  # Run on a repeating schedule
-
-Requirements: 5.4, 6.2, 8.2, 8.4
 """
 
 from __future__ import annotations
@@ -43,7 +41,6 @@ def _build_sources(config: AppConfig) -> list[tuple[JobSource, FallbackJobSource
     """Construct the (primary, fallback) source pairs from config."""
     delay = config.inter_request_delay_seconds
 
-    # Indeed: Playwright primary, Remotive API as reliable fallback
     indeed_primary = IndeedSource(
         search_url=config.indeed_search_url,
         inter_request_delay_seconds=delay,
@@ -53,7 +50,6 @@ def _build_sources(config: AppConfig) -> list[tuple[JobSource, FallbackJobSource
         inter_request_delay_seconds=delay,
     )
 
-    # Glints: Playwright primary, Jobicy API as reliable fallback
     glints_primary = GlintsSource(
         search_url=config.glints_search_url,
         inter_request_delay_seconds=delay,
@@ -71,12 +67,7 @@ def run_once(config: AppConfig) -> int:
     store = JobStore(config.db_path)
     try:
         sources = _build_sources(config)
-        poster = Poster(
-            consumer_key=config.consumer_key.get_secret_value(),
-            consumer_secret=config.consumer_secret.get_secret_value(),
-            access_token=config.access_token.get_secret_value(),
-            access_token_secret=config.access_token_secret.get_secret_value(),
-        )
+        poster = Poster(api_key=config.zernio_api_key.get_secret_value())
         manager = JobManager(
             config=config,
             sources=sources,
@@ -104,7 +95,6 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    # Load config; exit 2 on missing env vars (Requirement 6.2)
     try:
         config = AppConfig()
     except ValidationError as exc:
@@ -117,19 +107,16 @@ def main() -> None:
         sys.exit(2)
 
     if args.scheduled:
-        # Requirement 5.4: scheduled execution via the `schedule` library
         logger.info(
             "Starting scheduled mode: every %d minutes",
             config.run_interval_minutes,
         )
         schedule.every(config.run_interval_minutes).minutes.do(run_once, config)
-        # Run immediately on start, then on schedule
         run_once(config)
         while True:
             schedule.run_pending()
             time.sleep(1)
     else:
-        # Requirement 8.4: single Run_Cycle, exit 0 on success, non-zero on failure
         exit_code = run_once(config)
         sys.exit(exit_code)
 

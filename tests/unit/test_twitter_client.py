@@ -1,22 +1,7 @@
-"""Unit tests for twitter_client.py — Poster behavior."""
+"""Unit tests for twitter_client.py — Poster behavior with Zernio API."""
 
 import pytest
-from twitter_client import Poster, PostResult
-
-
-class TestPosterAuth:
-    def test_empty_token_returns_auth_failure(self):
-        poster = Poster(oauth_token="", client_id="cid", client_secret="csec")
-        result = poster.post("Hello world")
-        assert result.success is False
-        assert result.error_code == 401
-        assert "Authentication failed" in result.error_message
-
-    def test_whitespace_token_returns_auth_failure(self):
-        poster = Poster(oauth_token="   ", client_id="cid", client_secret="csec")
-        result = poster.post("Hello world")
-        assert result.success is False
-        assert result.error_code == 401
+from twitter_client import Poster, PostResult, ThreadResult
 
 
 class TestPostResult:
@@ -31,3 +16,23 @@ class TestPostResult:
         assert r.success is False
         assert r.error_code == 403
         assert r.tweet_id is None
+
+
+class TestThreadResult:
+    def test_success_thread(self):
+        r = ThreadResult(success=True, tweet_ids=["1", "2", "3"])
+        assert r.success is True
+        assert len(r.tweet_ids) == 3
+
+    def test_empty_thread(self):
+        poster = Poster(api_key="test-key")
+        result = poster.post_thread([])
+        assert result.success is False
+        assert "Empty thread" in result.error_message
+
+
+class TestPosterInit:
+    def test_poster_creates_with_api_key(self):
+        poster = Poster(api_key="my-api-key")
+        assert poster._api_key == "my-api-key"
+        assert poster._account_id is None

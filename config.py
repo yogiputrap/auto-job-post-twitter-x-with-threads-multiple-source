@@ -11,11 +11,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class AppConfig(BaseSettings):
     """Application configuration sourced from environment variables."""
 
-    # OAuth 1.0a credentials for posting tweets
-    consumer_key: SecretStr
-    consumer_secret: SecretStr
-    access_token: SecretStr
-    access_token_secret: SecretStr
+    # Zernio API key for posting tweets via Zernio
+    zernio_api_key: SecretStr
 
     # Required search URLs
     indeed_search_url: str

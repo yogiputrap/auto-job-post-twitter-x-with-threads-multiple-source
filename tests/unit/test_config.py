@@ -1,7 +1,5 @@
 """Unit tests for config.py — AppConfig defaults and SecretStr behavior."""
 
-import os
-
 import pytest
 from config import AppConfig
 
@@ -9,9 +7,7 @@ from config import AppConfig
 @pytest.fixture
 def full_env(monkeypatch):
     """Set all required env vars."""
-    monkeypatch.setenv("OAUTH_TOKEN", "test-token-123")
-    monkeypatch.setenv("X_CLIENT_ID", "client-id-456")
-    monkeypatch.setenv("X_CLIENT_SECRET", "client-secret-789")
+    monkeypatch.setenv("ZERNIO_API_KEY", "test-zernio-key-123")
     monkeypatch.setenv("INDEED_SEARCH_URL", "https://indeed.com/search")
     monkeypatch.setenv("GLINTS_SEARCH_URL", "https://glints.com/search")
 
@@ -27,29 +23,27 @@ class TestAppConfigDefaults:
 
     def test_reads_required_vars(self, full_env):
         config = AppConfig()
-        assert config.oauth_token.get_secret_value() == "test-token-123"
+        assert config.zernio_api_key.get_secret_value() == "test-zernio-key-123"
         assert config.indeed_search_url == "https://indeed.com/search"
 
 
 class TestSecretStrSafety:
-    def test_repr_does_not_expose_token(self, full_env):
+    def test_repr_does_not_expose_key(self, full_env):
         config = AppConfig()
-        repr_str = repr(config.oauth_token)
-        assert "test-token-123" not in repr_str
+        repr_str = repr(config.zernio_api_key)
+        assert "test-zernio-key-123" not in repr_str
         assert "**********" in repr_str
 
-    def test_str_does_not_expose_secret(self, full_env):
+    def test_str_does_not_expose_key(self, full_env):
         config = AppConfig()
-        str_val = str(config.x_client_secret)
-        assert "client-secret-789" not in str_val
+        str_val = str(config.zernio_api_key)
+        assert "test-zernio-key-123" not in str_val
 
 
 class TestMissingVars:
-    def test_missing_oauth_token_raises(self, monkeypatch):
-        monkeypatch.setenv("X_CLIENT_ID", "cid")
-        monkeypatch.setenv("X_CLIENT_SECRET", "csec")
+    def test_missing_api_key_raises(self, monkeypatch):
         monkeypatch.setenv("INDEED_SEARCH_URL", "https://x.com")
         monkeypatch.setenv("GLINTS_SEARCH_URL", "https://y.com")
-        monkeypatch.delenv("OAUTH_TOKEN", raising=False)
+        monkeypatch.delenv("ZERNIO_API_KEY", raising=False)
         with pytest.raises(Exception):  # ValidationError
             AppConfig()

@@ -1,13 +1,19 @@
-"""Twitter/X API v2 client using OAuth 1.0a (User Context) for posting tweets and threads."""
+"""Twitter/X posting client via Zernio API.
+
+Uses Zernio (https://zernio.com) as a proxy to post tweets and threads
+to X/Twitter without needing direct OAuth credentials.
+"""
 
 from dataclasses import dataclass, field
 from typing import List, Optional
 import time
 import logging
 
-import tweepy
+import httpx
 
 logger = logging.getLogger(__name__)
+
+ZERNIO_BASE_URL = "https://zernio.com/api/v1"
 
 
 @dataclass
@@ -28,95 +34,129 @@ class ThreadResult:
 
 
 class Poster:
-    """Posts tweets via X API v2 using OAuth 1.0a User Context (tweepy.Client)."""
+    """Posts tweets via Zernio API."""
 
     _sleep_func = staticmethod(time.sleep)
-    MAX_RETRIES_5XX = 3
+    MAX_RETRIES = 3
     BACKOFF_BASE_SECONDS = 2
 
-    def __init__(self, consumer_key: str, consumer_secret: str,
-                 access_token: str, access_token_secret: str) -> None:
-        if not all([consumer_key, consumer_secret, access_token, access_token_secret]):
-            self._client = None
-            return
+    def __init__(self, api_key: str) -> None:
+        self._api_key = api_key
+        self._account_id: Optional[str] = None
+        self._headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
 
-        self._client = tweepy.Client(
-            consumer_key=consumer_key,
-            consumer_secret=consumer_secret,
-            access_token=access_token,
-            access_token_secret=access_token_secret,
-            wait_on_rate_limit=False,
-        )
-
-    def post(self, body: str, reply_to: Optional[str] = None) -> PostResult:
-        if self._client is None:
-            return PostResult(success=False, error_code=401, error_message="Authentication failed")
+    def _get_account_id(self) -> Optional[str]:
+        """Fetch the Twitter account ID from Zernio."""
+        if self._account_id:
+            return self._account_id
 
         try:
-            kwargs = {"text": body}
-            if reply_to:
-                kwargs["in_reply_to_tweet_id"] = reply_to
-            response = self._client.create_tweet(**kwargs)
-            tweet_id = str(response.data["id"])
-            return PostResult(success=True, tweet_id=tweet_id)
-        except tweepy.TooManyRequests as exc:
-            return self._handle_429(exc, body, reply_to)
-        except tweepy.TwitterServerError as exc:
-            return self._handle_5xx(exc, body, reply_to)
-        except tweepy.Unauthorized:
-            return PostResult(success=False, error_code=401, error_message="Authentication failed")
-        except tweepy.Forbidden as exc:
-            return PostResult(success=False, error_code=403, error_message=str(exc))
-        except tweepy.BadRequest as exc:
-            return PostResult(success=False, error_code=400, error_message=str(exc))
-        except tweepy.HTTPException as exc:
-            code = exc.response.status_code if hasattr(exc, "response") and exc.response else 500
-            return PostResult(success=False, error_code=code, error_message=str(exc))
+            with httpx.Client(timeout=30) as client:
+                resp = client.get(
+                    f"{ZERNIO_BASE_URL}/accounts",
+                    headers=self._headers,
+                )
+                if resp.status_code != 200:
+                    logger.error("Failed to fetch Zernio accounts: %d %s", resp.status_code, resp.text)
+                    return None
+
+                data = resp.json()
+                accounts = data if isinstance(data, list) else data.get("accounts", data.get("data", []))
+
+                for account in accounts:
+                    platform = account.get("platform", "").lower()
+                    if platform in ("twitter", "x"):
+                        self._account_id = account.get("id") or account.get("accountId")
+                        logger.info("Found Twitter account: %s", self._account_id)
+                        return self._account_id
+
+                logger.error("No Twitter/X account found in Zernio accounts")
+                return None
+        except Exception as exc:
+            logger.error("Error fetching Zernio accounts: %s", exc)
+            return None
+
+    def post(self, body: str) -> PostResult:
+        """Post a single tweet via Zernio."""
+        account_id = self._get_account_id()
+        if not account_id:
+            return PostResult(success=False, error_code=401, error_message="No Twitter account found in Zernio")
+
+        payload = {
+            "content": body,
+            "platforms": [{"platform": "twitter", "accountId": account_id}],
+            "publishNow": True,
+        }
+
+        try:
+            with httpx.Client(timeout=30) as client:
+                resp = client.post(
+                    f"{ZERNIO_BASE_URL}/posts",
+                    headers=self._headers,
+                    json=payload,
+                )
+
+                if resp.status_code in (200, 201):
+                    data = resp.json()
+                    tweet_id = data.get("id") or data.get("postId") or "unknown"
+                    return PostResult(success=True, tweet_id=str(tweet_id))
+                else:
+                    return PostResult(
+                        success=False,
+                        error_code=resp.status_code,
+                        error_message=resp.text[:200],
+                    )
         except Exception as exc:
             return PostResult(success=False, error_code=500, error_message=str(exc))
 
     def post_thread(self, tweets: List[str]) -> ThreadResult:
+        """Post a thread via Zernio using platformSpecificData.threadItems."""
         if not tweets:
             return ThreadResult(success=False, error_message="Empty thread")
-        if self._client is None:
-            return ThreadResult(success=False, failed_at=0, error_code=401, error_message="Authentication failed")
 
-        tweet_ids: List[str] = []
-        reply_to: Optional[str] = None
+        account_id = self._get_account_id()
+        if not account_id:
+            return ThreadResult(
+                success=False, failed_at=0, error_code=401,
+                error_message="No Twitter account found in Zernio",
+            )
 
-        for i, body in enumerate(tweets):
-            result = self.post(body, reply_to=reply_to)
-            if not result.success:
-                logger.error("Thread failed at tweet %d/%d: %s", i + 1, len(tweets), result.error_message)
-                return ThreadResult(success=False, tweet_ids=tweet_ids, failed_at=i,
-                                    error_code=result.error_code, error_message=result.error_message)
-            tweet_ids.append(result.tweet_id)
-            reply_to = result.tweet_id
-            if i < len(tweets) - 1:
-                self._sleep_func(1)
+        # Build thread items for Zernio
+        thread_items = [{"content": tweet} for tweet in tweets]
 
-        logger.info("Thread posted: %d tweets, IDs=%s", len(tweet_ids), tweet_ids)
-        return ThreadResult(success=True, tweet_ids=tweet_ids)
+        payload = {
+            "content": tweets[0],
+            "platforms": [{"platform": "twitter", "accountId": account_id}],
+            "publishNow": True,
+            "platformSpecificData": {
+                "threadItems": thread_items,
+            },
+        }
 
-    def _handle_429(self, exc, body: str, reply_to: Optional[str]) -> PostResult:
-        wait = 60
-        if hasattr(exc, "response") and exc.response:
-            reset = exc.response.headers.get("x-rate-limit-reset")
-            if reset:
-                try:
-                    wait = min(max(0, int(reset) - int(time.time())), 900)
-                except (ValueError, TypeError):
-                    pass
-        logger.warning("Rate limited. Waiting %ds.", wait)
-        self._sleep_func(wait)
-        return self.post(body, reply_to)
+        try:
+            with httpx.Client(timeout=60) as client:
+                resp = client.post(
+                    f"{ZERNIO_BASE_URL}/posts",
+                    headers=self._headers,
+                    json=payload,
+                )
 
-    def _handle_5xx(self, exc, body: str, reply_to: Optional[str]) -> PostResult:
-        for attempt in range(self.MAX_RETRIES_5XX):
-            wait = self.BACKOFF_BASE_SECONDS * (2 ** attempt)
-            logger.warning("5xx. Retry %d/%d after %ds.", attempt + 1, self.MAX_RETRIES_5XX, wait)
-            self._sleep_func(wait)
-            result = self.post(body, reply_to)
-            if result.success or (result.error_code and result.error_code < 500):
-                return result
-        return PostResult(success=False, error_code=500, error_message="All retries exhausted")
+                if resp.status_code in (200, 201):
+                    data = resp.json()
+                    post_id = str(data.get("id") or data.get("postId") or "unknown")
+                    tweet_ids = [post_id] + [f"{post_id}-{i}" for i in range(1, len(tweets))]
+                    logger.info("Thread posted via Zernio: %d tweets, post_id=%s", len(tweets), post_id)
+                    return ThreadResult(success=True, tweet_ids=tweet_ids)
+                else:
+                    logger.error("Zernio thread post failed: %d %s", resp.status_code, resp.text[:200])
+                    return ThreadResult(
+                        success=False, failed_at=0,
+                        error_code=resp.status_code,
+                        error_message=resp.text[:200],
+                    )
+        except Exception as exc:
+            logger.error("Exception posting thread via Zernio: %s", exc)
+            return ThreadResult(success=False, failed_at=0, error_code=500, error_message=str(exc))
