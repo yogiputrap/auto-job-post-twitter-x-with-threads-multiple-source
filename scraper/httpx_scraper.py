@@ -454,10 +454,26 @@ class JobicySource(FallbackJobSource):
             try:
                 title = (item.get("jobTitle") or "").strip()
                 company = (item.get("companyName") or "").strip()
-                location = (item.get("jobGeo") or "Remote").strip()
+                
+                # jobGeo can be a string or a list
+                geo = item.get("jobGeo") or "Remote"
+                if isinstance(geo, list):
+                    location = ", ".join(str(g) for g in geo) if geo else "Remote"
+                else:
+                    location = str(geo).strip()
+                
                 url = (item.get("url") or "").strip()
-                description = (item.get("jobDescription") or "").strip()
-                job_type = (item.get("jobType") or item.get("jobIndustry", "")).strip() or None
+                description = item.get("jobDescription") or ""
+                if isinstance(description, list):
+                    description = "\n".join(str(d) for d in description)
+                else:
+                    description = str(description).strip()
+                
+                job_type_raw = item.get("jobType") or item.get("jobIndustry", "")
+                if isinstance(job_type_raw, list):
+                    job_type = ", ".join(str(j) for j in job_type_raw) if job_type_raw else None
+                else:
+                    job_type = str(job_type_raw).strip() or None
                 
                 salary_min = item.get("annualSalaryMin")
                 salary_max = item.get("annualSalaryMax")

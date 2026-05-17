@@ -142,7 +142,7 @@ class Poster:
         return "zernio-post"
 
     def _post_with_retry(self, client: httpx.Client, payload: dict) -> httpx.Response:
-        """POST with automatic retry on 429."""
+        """POST with automatic retry on 429 (rate limit), but not on daily limit."""
         for attempt in range(self.MAX_RETRIES):
             resp = client.post(
                 f"{ZERNIO_BASE_URL}/posts",
@@ -150,9 +150,13 @@ class Poster:
                 json=payload,
             )
             if resp.status_code == 429:
-                # Parse retry delay from response
+                # Check if it's a daily limit (no point retrying)
                 try:
                     err_data = resp.json()
+                    err_msg = err_data.get("error", "")
+                    if "Daily post limit" in err_msg or "daily" in err_msg.lower():
+                        logger.error("Daily post limit reached, not retrying: %s", err_msg[:150])
+                        return resp
                     wait = err_data.get("details", {}).get("retryAfterSeconds", 5)
                 except Exception:
                     wait = 5

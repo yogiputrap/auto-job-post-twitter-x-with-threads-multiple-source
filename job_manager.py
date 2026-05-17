@@ -164,6 +164,10 @@ class JobManager:
                             thread_result.error_code,
                             thread_result.error_message,
                         )
+                        # Stop cycle if daily limit reached
+                        if thread_result.error_code == 429 and thread_result.error_message and "Daily post limit" in thread_result.error_message:
+                            self._logger.warning("Daily post limit reached, stopping cycle")
+                            break
                 except Exception as exc:
                     summary.failed += 1
                     self._logger.error(
