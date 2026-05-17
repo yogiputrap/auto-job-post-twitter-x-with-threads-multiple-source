@@ -64,16 +64,65 @@ class Poster:
                     return None
 
                 data = resp.json()
-                accounts = data if isinstance(data, list) else data.get("accounts", data.get("data", []))
+                logger.info("Zernio accounts response: %s", str(data)[:500])
+
+                # Handle various response shapes
+                accounts = []
+                if isinstance(data, list):
+                    accounts = data
+                elif isinstance(data, dict):
+                    # Try common wrapper keys
+                    for key in ("accounts", "data", "items", "results", "socialAccounts"):
+                        if key in data and isinstance(data[key], list):
+                            accounts = data[key]
+                            break
+                    # If dict has platform-like fields, treat it as single account
+                    if not accounts and ("platform" in data or "provider" in data):
+                        accounts = [data]
 
                 for account in accounts:
-                    platform = account.get("platform", "").lower()
-                    if platform in ("twitter", "x"):
-                        self._account_id = account.get("id") or account.get("accountId")
-                        logger.info("Found Twitter account: %s", self._account_id)
+                    # Check various platform field names
+                    platform = (
+                        account.get("platform", "") or
+                        account.get("provider", "") or
+                        account.get("type", "") or
+                        account.get("network", "") or
+                        account.get("socialNetwork", "")
+                    ).lower()
+
+                    if platform in ("twitter", "x", "twitter/x"):
+                        # Try various ID field names
+                        acct_id = (
+                            account.get("id") or
+                            account.get("accountId") or
+                            account.get("_id") or
+                            account.get("socialAccountId") or
+                            account.get("uid")
+                        )
+                        if acct_id:
+                            self._account_id = str(acct_id)
+                            logger.info("Found Twitter account ID: %s", self._account_id)
+                            return self._account_id
+
+                # If we still haven't found it, try first account regardless of platform
+                if accounts:
+                    first = accounts[0]
+                    acct_id = (
+                        first.get("id") or
+                        first.get("accountId") or
+                        first.get("_id") or
+                        first.get("socialAccountId") or
+                        first.get("uid")
+                    )
+                    if acct_id:
+                        logger.warning(
+                            "No explicit Twitter account found, using first account: %s (platform=%s)",
+                            acct_id, first.get("platform", first.get("provider", "unknown"))
+                        )
+                        self._account_id = str(acct_id)
                         return self._account_id
 
-                logger.error("No Twitter/X account found in Zernio accounts")
+                logger.error("No usable account found in Zernio response")
                 return None
         except Exception as exc:
             logger.error("Error fetching Zernio accounts: %s", exc)
