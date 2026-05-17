@@ -503,6 +503,12 @@ def api_health():
     return jsonify({"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()})
 
 
+@app.route("/api/schedule")
+def api_schedule():
+    from scheduler import get_schedule_summary
+    return jsonify(get_schedule_summary())
+
+
 @app.route("/api/test-scrape")
 def api_test_scrape():
     import time as _time

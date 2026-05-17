@@ -104,8 +104,13 @@ class JobManager:
         self._redaction_filter = CredentialRedactionFilter(secrets)
         self._logger.addFilter(self._redaction_filter)
 
-    def run_once(self) -> CycleSummary:
-        """Execute one full Run_Cycle."""
+    def run_once(self, max_posts: int = 0) -> CycleSummary:
+        """Execute one full Run_Cycle.
+        
+        Args:
+            max_posts: Maximum number of posts to make this cycle.
+                       0 means unlimited (post all new listings).
+        """
         summary = CycleSummary()
 
         try:
@@ -123,6 +128,11 @@ class JobManager:
 
             first_post = True
             for listing in new_listings:
+                # Respect max_posts limit
+                if max_posts > 0 and summary.posted >= max_posts:
+                    self._logger.info("Reached max_posts=%d limit, stopping", max_posts)
+                    break
+
                 try:
                     if not first_post:
                         self._sleep_func(self._config.inter_post_delay_seconds)
