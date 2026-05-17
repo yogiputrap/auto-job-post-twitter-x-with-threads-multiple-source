@@ -3,6 +3,10 @@
 __pycache__
 *.pyc
 .env
+.venv
+venv
 posted_jobs.sqlite
 tests/
 .github/
+.DS_Store
+*.sqlite

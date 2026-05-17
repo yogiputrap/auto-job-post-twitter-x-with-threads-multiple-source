@@ -5,9 +5,10 @@ WORKDIR /app
 # Install system deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cron \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# Install Python dependencies first (cache layer)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -17,18 +18,16 @@ RUN playwright install chromium --with-deps
 # Copy source code
 COPY . .
 
+# Ensure entrypoint is executable and has unix line endings
+RUN chmod +x /app/entrypoint.sh && \
+    sed -i 's/\r$//' /app/entrypoint.sh
+
 # Create log file
 RUN touch /var/log/bot.log
 
-# Copy and set entrypoint
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
-# Dashboard port
 EXPOSE 5000
 
-# Health check — Dokploy/Traefik uses this to know the container is ready
-HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/api/health')" || exit 1
+HEALTHCHECK --interval=10s --timeout=5s --start-period=20s --retries=3 \
+    CMD curl -f http://localhost:5000/api/health || exit 1
 
-CMD ["/entrypoint.sh"]
+ENTRYPOINT ["/bin/bash", "/app/entrypoint.sh"]
