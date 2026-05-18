@@ -111,18 +111,54 @@ class JobManager:
 
     @staticmethod
     def _is_remote(listing: JobListing) -> bool:
-        """Check if a listing is remote. Skip if no remote indication.
+        """Check if a listing is open for Asia or worldwide candidates.
         
-        Note: Listings from Remotive/Jobicy are always remote by definition.
+        Skip listings that are restricted to specific non-Asia regions
+        (e.g., USA only, Europe only, Americas only).
         """
-        text = f"{listing.title} {listing.location} {listing.job_type or ''} {listing.url}".lower()
-        remote_keywords = ['remote', 'wfh', 'work from home', 'anywhere', 'worldwide',
-                           'distributed', 'fully remote', 'home office', 'telecommute',
-                           'americas', 'europe', 'asia', 'oceania', 'global']
-        # Remotive and Jobicy are remote-only job boards
-        if 'remotive.com' in text or 'jobicy.com' in text:
+        location_lower = listing.location.lower()
+        text_all = f"{location_lower} {listing.title.lower()} {(listing.job_type or '').lower()}"
+        
+        # Acceptable: explicitly Asia, worldwide, or fully open
+        accept_keywords = [
+            'asia', 'apac', 'indonesia', 'singapore', 'malaysia', 'philippines',
+            'thailand', 'vietnam', 'india', 'japan', 'korea', 'china',
+            'hong kong', 'taiwan',
+            'worldwide', 'global', 'anywhere', 'any country', 'any location',
+            'any timezone', 'any time zone', 'work from anywhere',
+        ]
+        
+        # If location explicitly mentions Asia or worldwide → accept
+        if any(kw in text_all for kw in accept_keywords):
             return True
-        return any(kw in text for kw in remote_keywords)
+        
+        # Reject: location restricted to non-Asia regions
+        reject_keywords = [
+            'usa only', 'us only', 'united states only', 'us-based only',
+            'us residents', 'must be located in the us',
+            'eu only', 'europe only', 'eea only',
+            'uk only', 'canada only',
+            'americas only', 'north america only',
+            'emea only', 'latin america only', 'latam only',
+        ]
+        if any(kw in text_all for kw in reject_keywords):
+            return False
+        
+        # If location is a single restricted region (without "only" wording)
+        # Check if the location string is JUST that region
+        location_clean = location_lower.strip()
+        restricted_regions = ['usa', 'us', 'united states', 'eu', 'europe', 'uk',
+                              'canada', 'americas', 'north america', 'latam']
+        # If location is exactly one of these (or with country/state), reject
+        if location_clean in restricted_regions:
+            return False
+        # If location is "USA, Canada" or similar (no Asia) — reject
+        if any(loc in location_clean for loc in ['usa', 'us ', 'united states']) and \
+           not any(kw in text_all for kw in accept_keywords):
+            return False
+        
+        # Default: skip if uncertain (we want strict filter)
+        return False
 
     def run_once(self, max_posts: int = 0) -> CycleSummary:
         """Execute one full Run_Cycle.
@@ -144,7 +180,7 @@ class JobManager:
                 if self._store.contains(listing.job_id):
                     summary.skipped_duplicate += 1
                 elif not self._is_remote(listing):
-                    self._logger.info("Skipping non-remote listing: %s (%s)", listing.title, listing.location)
+                    self._logger.info("Skipping listing not open for Asia/worldwide: %s (%s)", listing.title, listing.location)
                     summary.skipped_duplicate += 1
                 else:
                     new_listings.append(listing)
