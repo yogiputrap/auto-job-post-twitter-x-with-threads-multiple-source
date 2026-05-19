@@ -14,6 +14,7 @@ from typing import Optional
 import httpx
 
 from models import JobListing
+from shortener import shorten_url
 
 logger = logging.getLogger(__name__)
 
@@ -156,7 +157,7 @@ def format_long_post(listing: JobListing) -> str:
                 description = description[:max_desc_len].rsplit('\n', 1)[0] + "\n..."
             lines.append(description)
 
-    lines.extend(["", "━━━━━━━━━━━━━━━━━━━━", "", "Apply Now 👇", f"🔗 {listing.url}", "", HASHTAGS_LONG])
+    lines.extend(["", "━━━━━━━━━━━━━━━━━━━━", "", "Apply Now 👇", f"🔗 {shorten_url(listing.url)}", "", HASHTAGS_LONG])
     post = "\n".join(lines)
     if len(post) > POST_LIMIT:
         post = post[:POST_LIMIT - 10] + "\n..."
@@ -240,7 +241,7 @@ def _format_smart_summary(listing: JobListing) -> str:
     lines.extend([
         "",
         "Apply Now 👇",
-        f"🔗 {listing.url}",
+        f"🔗 {shorten_url(listing.url)}",
         "",
         HASHTAGS_LONG,
     ])
@@ -423,7 +424,7 @@ Description: {description or 'Tidak ada deskripsi detail'}"""
         if response.status_code == 200:
             data = response.json()
             summary = data["choices"][0]["message"]["content"].strip()
-            post = f"{summary}\n\nApply Now 👇\n🔗 {listing.url}\n\n{HASHTAGS_LONG}"
+            post = f"{summary}\n\nApply Now 👇\n🔗 {shorten_url(listing.url)}\n\n{HASHTAGS_LONG}"
             if len(post) > POST_LIMIT:
                 post = post[:POST_LIMIT - 10] + "\n..."
             return post

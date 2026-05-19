@@ -17,7 +17,7 @@ class TestAppConfigDefaults:
         config = AppConfig()
         assert config.run_interval_minutes == 60
         assert config.db_path == "posted_jobs.sqlite"
-        assert config.listings_per_source == 10
+        assert config.listings_per_source == 25
         assert config.inter_post_delay_seconds == 5
         assert config.inter_request_delay_seconds == 2
         assert config.post_format == "summary"
