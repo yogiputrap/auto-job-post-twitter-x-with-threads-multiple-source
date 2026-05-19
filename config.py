@@ -27,7 +27,7 @@ class AppConfig(BaseSettings):
     # Optional tuning parameters
     run_interval_minutes: int = 60
     db_path: str = "posted_jobs.sqlite"
-    listings_per_source: int = 10
+    listings_per_source: int = 25
     inter_post_delay_seconds: int = 5
     inter_request_delay_seconds: int = 2
 
